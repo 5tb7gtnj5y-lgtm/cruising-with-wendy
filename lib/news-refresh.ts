@@ -3,12 +3,19 @@ import {digest} from "./session";
 import {normalUrl,slugify} from "./site";
 import {parseRss,type FeedStory} from "./rss";
 type Source=NewsSource;
-const COLLECTOR_VERSION="expanded-rss-20261013",INTERVAL_MS=3*60*60*1000;
+const COLLECTOR_VERSION="expanded-rss-20261013-v2",INTERVAL_MS=3*60*60*1000;
 type Budget={remaining:number;deadline:number};
 export function approvedForSource(value:string,source:Source){try{const u=new URL(value);return u.protocol==="https:"&&!u.username&&!u.password&&source.hosts.some(h=>u.hostname===h||u.hostname.endsWith("."+h));}catch{return false;}}
 export function recentDate(value:string,now=Date.now()){const time=Date.parse(value);return Number.isFinite(time)&&time<=now&&time>=now-60*86400000?new Date(time).toISOString():null;}
 const clean=(s:string)=>s.replace(/\s+/g," ").trim();
 export function announcementPath(value:string){return /\/(newsroom\/[^/?]+|news\/[^/?]+|news-releases\/[^/?]+|press-releases?\/[^/?]+|press\/latest-releases\/[^/?]+|ahoy\/stories\/[^/?]+|en\/newsroom\/news\/[^/?]+|contact-us\/media-centre\/[^/?]+|\d{4}\/\d{2}\/\d{2}\/[^/?]+)/i.test(new URL(value).pathname);}
+export function sourceAnnouncement(value:string,source:Source){
+ if(!approvedForSource(value,source))return false;
+ const path=new URL(value).pathname;
+ if(source.line==="carnival")return /^\/20\d{2}\/\d{2}\/\d{2}\/[^/]+\/?$/.test(path);
+ if(source.line==="viking")return /^\/press\/press-releases\/20\d{2}-\d{2}-\d{2}-.+\.html$/.test(path);
+ return announcementPath(value);
+}
 async function readPage(url:string,source:Source,budget:Budget){
  for(let n=0;n<3;n++){
   if(!approvedForSource(url,source)&&!source.feedHosts?.some(host=>{try{const u=new URL(url);return u.protocol==="https:"&&!u.username&&!u.password&&u.hostname===host;}catch{return false;}}))throw Error("Unapproved redirect");
@@ -77,15 +84,17 @@ export async function runNewsRefresh(env:Cloudflare.Env,options:{timeBudgetMs?:n
     const portals=[source.url,...(source.additionalUrls||[])];
     for(const portal of portals){
      try{const page=await readPage(portal,source,budget),data=await pageData(page.body,page.url);readable++;sourceReadable=true;
-      candidates=[...new Set(data.links)].filter(u=>approvedForSource(u,source)&&announcementPath(u)&&normalUrl(u)!==normalUrl(page.url)).slice(0,2);
+      candidates=[...new Set(data.links)].filter(u=>sourceAnnouncement(u,source)&&normalUrl(u)!==normalUrl(page.url)).slice(0,2);
       if(candidates.length)break;
      }catch{/* Try only the other explicitly approved newsroom, when available. */}
     }
     if(!candidates.length){failures.push(source.name+(sourceReadable?": no readable announcement links":": source could not be read"));continue;}
-    for(const url of candidates){
+    const fetched=await Promise.allSettled(candidates.map(async url=>{
      const story=await readPage(url,source,budget),metadata=await pageData(story.body,story.url),date=recentDate(metadata.date);
-     if(date&&metadata.title)stories.push({url:story.url,title:metadata.title,date});
-    }
+     return date&&metadata.title?{url:story.url,title:metadata.title,date}:null;
+    }));
+    for(const result of fetched)if(result.status==="fulfilled"&&result.value)stories.push(result.value);
+    if(fetched.some(result=>result.status==="rejected"))failures.push(source.name+": an announcement could not be read");
     added+=await publishNewsLinks(db,source,stories);
    }catch{failures.push(source.name+": source could not be read");}
   }
