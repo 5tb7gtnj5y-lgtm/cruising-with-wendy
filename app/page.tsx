@@ -1,8 +1,6 @@
 import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Anchor, Palmtree, Luggage } from "lucide-react";
 import { publicEntries, setting } from "@/lib/content";
 import { absolute, LINES, dateLabel } from "@/lib/site";
-import { NewsPhoto } from "@/components/news-photo";
-import { harbourPhoto } from "@/lib/news-photos";
 import { NewsFeed } from "@/components/news-feed";
 import { Empty, WaveDivider } from "@/components/site-shell";
 
@@ -16,7 +14,7 @@ export default async function Home(){
    <section className="hero">
     <div className="hero-copy">
      <p className="eyebrow hero-eyebrow"><Ship size={17}/> ALL ABOARD, ADVENTURE AHEAD</p>
-     <h1>A little sea air.<br/><em>A lot of <br/>adventure.</em></h1>
+     <h1>Come aboard.<br/><em>Let’s make<br/>some waves.</em></h1>
      <p>Cruise news, brilliant ideas and a little holiday daydreaming. Welcome to your happy place at sea.</p>
      <div className="hero-buttons">
       <a className="button primary" href="/news">Let’s explore <ArrowRight size={19}/></a>
@@ -27,8 +25,10 @@ export default async function Home(){
       <span>First cruise or fiftieth?<br/><strong>There’s always more to sea.</strong></span>
      </div>
     </div>
-    <div className="hero-visual">
-     <NewsPhoto photo={harbourPhoto}/>
+    <div className="hero-visual hero-brand" aria-label="Welcome aboard with Wendy">
+     <span className="logo-sun" aria-hidden="true"/>
+     <img className="hero-logo" src="/brand/wendy-logo.webp" width="1336" height="1177" fetchPriority="high" alt="Cruising with Wendy: a smiling captain, cruise ship and turquoise waves"/>
+     <span className="hero-welcome"><Sun size={17}/> Your next adventure starts here</span>
     </div>
    </section>
    <WaveDivider/>

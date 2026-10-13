@@ -218,3 +218,80 @@ input,select,textarea{border-radius:11px;border-color:#bdd8d8}
 .news-shopping-row.mobile-shopping-row{display:none}
 .news-shopping-row>.shopping-intro{font-size:11px}
 @media(max-width:600px){.news-shopping-row.desktop-shopping-row{display:none}.news-shopping-row.mobile-shopping-row{display:flex}.news-shopping-row{gap:5px 12px;padding:12px 15px}.shopping-links{gap:5px 16px}.shopping-product>a{font-size:12px}.shopping-product small.shopping-link-label{flex-basis:auto;font-size:10px}.photo-info-copy{font-size:11px}}
+
+/* Wendy's new captain logo: turquoise seas, sunshine yellow and coral. */
+:root{--ink:#103c50;--teal:#087787;--coral:#eb785d;--sun:#ffda62;--sea:#19bcb5;--paper:#f8fffc;--muted:#496976;--line:#cce9e4;--serif:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif}
+body{background:var(--paper);font-family:"Trebuchet MS",Arial,sans-serif}
+h1,h2,h3{font-weight:800;letter-spacing:-.035em}
+.masthead-strip{background:var(--ink);color:#fff4c7;border-bottom:3px solid var(--sun);padding:9px 16px}
+.site-header{background:#fffef8;padding-top:12px;padding-bottom:12px;border-bottom:1px solid var(--line);gap:24px}
+.brand-new{display:block;flex-shrink:0;line-height:0;white-space:normal}
+.brand-logo{display:block;width:144px;height:auto;max-width:100%;object-fit:contain}
+.site-header nav{font-size:13px;gap:5px}
+.site-header nav>a,.line-menu>summary{background:#e8f9f5;border:1px solid #d1eee8;padding:10px 15px;font-weight:700}
+.site-header nav>a:hover,.line-menu[open]>summary{background:#fff0b3;color:var(--ink);border-color:#eed37b}
+.search-menu>summary{background:#d9f5ef;color:var(--ink)}
+.search-menu form,.line-menu>div{border-radius:20px;border-color:var(--line);box-shadow:0 12px 28px #103c5017}
+.hero-ocean{background:radial-gradient(ellipse at 0% 10%,#fff1b9,transparent 50%),linear-gradient(130deg,#e1faf3 20%,#c9f5f0 100%)}
+.hero{grid-template-columns:1fr 1.05fr;padding-top:34px;padding-bottom:25px;gap:40px}
+.hero h1{font-size:clamp(45px,4.5vw,66px);line-height:1.12}
+.hero h1 em,.essentials-banner h2 em{font-family:var(--serif);font-style:normal;font-weight:800;color:var(--teal)}
+.hero h1 em{position:relative}
+.hero-copy>p:not(.eyebrow){font-size:17px;color:#355e6b;max-width:430px}
+.hero-eyebrow{background:#fff7d8;border-color:#efdc94;color:var(--ink);box-shadow:none}
+.hero-brand{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0 10px;min-width:0}
+.logo-sun{position:absolute;inset:8% 5% 14%;z-index:-1;background:#ffffff5e;border:2px dashed #ffffffb3;border-radius:47% 53% 48% 52%;transform:rotate(-7deg)}
+.hero-logo{display:block;width:100%;max-width:520px;height:auto;object-fit:contain;filter:drop-shadow(0 10px 0 #08778709)}
+.hero-welcome{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:17px;border-radius:30px;background:#fff6cf;padding:8px 17px;border:1px solid #efd783;font-size:12px;color:#385764;font-weight:700;transform:rotate(-2deg)}
+.wave-divider{color:var(--paper)}
+.button{border-radius:26px;font-weight:700}
+.primary{background:var(--sun);color:var(--ink);box-shadow:0 4px 0 #e1b138}
+.primary:hover{background:#ffcf3f;color:var(--ink);box-shadow:0 6px 0 #e1b138}
+.primary:active{box-shadow:0 2px 0 #e1b138}
+.light,.ghost{background:#fffefa;border-color:#bddfd9;color:var(--ink)}
+.ghost:hover{background:#e4f9f3}
+.line-strip>a{background:#fff;border-color:var(--line);box-shadow:0 3px 0 #d3ece655}
+.line-strip>a:hover{background:#fff0b3;color:var(--ink)}
+.section-head h2{color:var(--ink)}
+.section-link{background:#e0f7f0;border-color:#bce4da;color:var(--teal)}
+.story-card,.news-card{border-radius:26px;border-color:var(--line);box-shadow:0 5px 0 #d2eae355,0 12px 24px #103c5005}
+.story-card:hover{box-shadow:0 8px 0 #c6e8dd66}
+.news-card h3{font-family:var(--serif);color:var(--ink);font-weight:800;line-height:1.3}
+.card-bottom{border-color:var(--line)}
+.icon-link{background:#fff0b3;color:var(--ink)}
+.icon-link:hover{background:#ffda62}
+.news-photo .visual-label{background:#fffaf0f5;border-radius:18px;color:var(--ink)}
+.news-shopping-row{background:#f4fcf8;border-color:#d8ebe2;color:var(--muted);border-radius:13px;font-size:11px}
+.shopping-product>a{color:var(--teal)}
+.line-card{border-radius:25px;border-color:var(--line);background:#e7faf3}
+.line-card:nth-child(3n+2){background:#fff4cb}.line-card:nth-child(3n){background:#fff0e7}
+.line-card-doodle{color:var(--teal);opacity:.11}
+.essentials-banner{background:#fff1bc;border:1px solid #eed783;border-radius:32px;box-shadow:0 7px 0 #f2dfa955}
+.essentials-banner h2 em{color:var(--teal)}
+.essentials-banner p:not(.eyebrow){color:#5e644f}
+footer{background:var(--ink);border-top:6px solid var(--sea);color:#fffef4}
+.footer-brand{width:178px;background:#fff8e9;border-radius:24px;padding:12px 17px;box-shadow:4px 4px 0 #ffda62}
+.footer-brand .brand-logo{width:144px}
+.footer-label{color:#ffda62;font-weight:700}
+.footer-horizon{color:#51d6c3}
+.footer-top p,.footer-bottom{color:#d2e9e5}
+.footer-note p{font-family:var(--serif);font-weight:700;color:#ffdf79}
+.page-heading h1,.article-header h1{color:var(--ink)}
+.heading-wave{background:radial-gradient(ellipse at 50% 100%,transparent 5px,var(--sea) 5.5px,var(--sea) 7.5px,transparent 8px) 0 0/17px 9px repeat-x}
+.filters,.newsroom-link,.empty,.article-aside .review-note,.seo-hints,.seo-status{background:#e9f9f2;border-radius:22px;border-color:var(--line)}
+input,select,textarea{border-radius:14px;border-color:#b9dcd4}
+input:focus,textarea:focus,select:focus{border-color:var(--teal)}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:var(--teal)}
+.product-card,.admin-editor,.admin-list,.editor-preview,.source-row{border-radius:22px;border-color:var(--line)}
+.product-icon,.empty-compass{background:#fff0b3;color:var(--ink)}
+.stat{border-radius:22px;border-top-color:var(--sea);box-shadow:0 4px 0 #d7ece455}
+.stat:nth-child(2){border-top-color:var(--coral)}.stat:nth-child(3){border-top-color:var(--sun)}.stat:nth-child(4){border-top-color:var(--teal)}
+.admin-tabs button{font-size:13px;color:#3f6773}
+.admin-tabs button.active{background:#daf6ec;color:var(--ink);border-bottom-color:var(--sea)}
+.admin-message{background:#e5f9ed;border-color:#b4dfc6;border-radius:18px;color:#225b48}
+.admin-message.error{background:#fff0e8;border-color:#efbaa6;color:#98402a}
+.status-pill{background:#e5f8ef;color:#23664c}.status-pill.draft{background:#fff0b3;color:#6d5217}
+.article-body,.prose{color:#355865}
+@media(max-width:1150px){.site-header{gap:17px}.brand-logo{width:130px}.site-header nav{font-size:12px}.site-header nav>a,.line-menu>summary{padding:10px 12px}.hero{gap:28px}.hero-logo{max-width:460px}}
+@media(max-width:850px){.brand-logo{width:120px}.site-header nav{display:flex;gap:8px;flex-wrap:wrap}.site-header nav>a,.line-menu>summary{padding:9px 16px}.hero{gap:26px}.hero h1{font-size:46px}.hero-copy>p:not(.eyebrow){font-size:15px}.hero-welcome{font-size:11px;padding:7px 11px}.hero-logo{max-width:380px}}
+@media(max-width:600px){.site-header{padding:12px 6% 15px;gap:13px}.brand-logo{width:114px}.site-header nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.site-header nav>a,.line-menu>summary{padding:9px 8px;font-size:12px}.hero{grid-template-columns:1fr;padding:27px 6% 18px;gap:22px}.hero h1{font-size:clamp(40px,10.7vw,52px)}.hero h1 em br{display:none}.hero-copy>p:not(.eyebrow){font-size:16px;max-width:100%}.hero-brand{padding:0 5%;margin:0}.hero-logo{width:100%;max-width:375px}.hero-welcome{font-size:11px;margin-top:13px}.logo-sun{inset:3% 2% 14%}.footer-brand{width:168px}.footer-brand .brand-logo{width:134px}.section-head h2{font-size:28px}.news-card h3{font-size:24px}.line-card{border-radius:23px}.essentials-banner{border-radius:27px}.admin-tabs button{font-size:12px}.admin-top .page-heading h1{font-size:31px}.product-card{border-radius:25px}}

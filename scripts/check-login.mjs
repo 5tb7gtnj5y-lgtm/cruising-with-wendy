@@ -7,7 +7,8 @@ import ts from 'typescript';
 
 const context=vm.createContext({console,Request,Response,Headers,URL,URLSearchParams,TextEncoder,crypto,Date,Uint8Array});
 const session=new vm.SourceTextModule(ts.transpileModule(fs.readFileSync('lib/session.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText,{context});await session.link(()=>{});await session.evaluate();
-const login=new vm.SourceTextModule(ts.transpileModule(fs.readFileSync('lib/worker-login.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText,{context});await login.link(()=>session);await login.evaluate();
+const brand=new vm.SourceTextModule(ts.transpileModule(fs.readFileSync('lib/brand.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText,{context});await brand.link(()=>{});await brand.evaluate();
+const login=new vm.SourceTextModule(ts.transpileModule(fs.readFileSync('lib/worker-login.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText,{context});await login.link(spec=>spec==="./brand"?brand:session);await login.evaluate();
 const api=login.namespace;
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_kind_mister_sinister.sql','utf8'));sqlite.exec(fs.readFileSync('transfer-data/site-backup.sql','utf8'));
 class Statement{constructor(query,values=[]){this.query=query;this.values=values;}bind(...values){return new Statement(this.query,values);}async first(){return sqlite.prepare(this.query).get(...this.values)||null;}async run(){sqlite.prepare(this.query).run(...this.values);return {success:true};}}
