@@ -8,7 +8,9 @@ export async function ensureAuthSchema(db:D1Database){
    db.prepare("CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY NOT NULL, expires_at INTEGER NOT NULL)"),
    db.prepare("CREATE INDEX IF NOT EXISTS admin_session_expiry ON admin_sessions(expires_at)"),
    db.prepare("CREATE TABLE IF NOT EXISTS login_attempts (key TEXT PRIMARY KEY NOT NULL, count INTEGER NOT NULL, expires_at INTEGER NOT NULL)"),
-   db.prepare("CREATE INDEX IF NOT EXISTS login_attempt_expiry ON login_attempts(expires_at)")
+   db.prepare("CREATE INDEX IF NOT EXISTS login_attempt_expiry ON login_attempts(expires_at)"),
+   db.prepare("CREATE TABLE IF NOT EXISTS login_challenges (token_hash TEXT PRIMARY KEY NOT NULL, ip_hash TEXT NOT NULL, expires_at INTEGER NOT NULL)"),
+   db.prepare("CREATE INDEX IF NOT EXISTS login_challenge_expiry ON login_challenges(expires_at)")
   ])).then(()=>undefined);
   authSchemaReady.set(db,pending);
  }
@@ -26,4 +28,4 @@ export function tokenFromCookie(cookie:string|null){const v=(cookie||"").split("
 export async function validSession(db:D1Database|undefined,cookie:string|null){const token=tokenFromCookie(cookie);if(!db||!token)return false;await ensureAuthSchema(db);return !!await db.prepare("SELECT token_hash FROM admin_sessions WHERE token_hash=? AND expires_at>? LIMIT 1").bind(await digest(token),Date.now()).first();}
 export async function createSession(db:D1Database){await ensureAuthSchema(db);const token=hex(crypto.getRandomValues(new Uint8Array(32)));await db.prepare("INSERT INTO admin_sessions(token_hash,expires_at) VALUES (?,?)").bind(await digest(token),Date.now()+SESSION_MS).run();return token;}
 export function sessionCookie(token:string,clear=false){return `${COOKIE_NAME}=${clear?"":token}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=${clear?0:SESSION_MS/1000}`;}
-export async function loginAllowed(db:D1Database,ip:string){await ensureAuthSchema(db);const window=Math.floor(Date.now()/900000),key=await digest("login:"+ip+":"+window);const row=await db.prepare("INSERT INTO login_attempts(key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count").bind(key,(window+2)*900000).first<{count:number}>();await db.batch([db.prepare("DELETE FROM login_attempts WHERE expires_at<?").bind(Date.now()),db.prepare("DELETE FROM admin_sessions WHERE expires_at<?").bind(Date.now())]);return !!row&&row.count<=5;}
+export async function loginAllowed(db:D1Database,ip:string,scope="login",limit=5){await ensureAuthSchema(db);const window=Math.floor(Date.now()/900000),key=await digest(scope+":"+ip+":"+window);const row=await db.prepare("INSERT INTO login_attempts(key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count").bind(key,(window+2)*900000).first<{count:number}>();await db.batch([db.prepare("DELETE FROM login_attempts WHERE expires_at<?").bind(Date.now()),db.prepare("DELETE FROM admin_sessions WHERE expires_at<?").bind(Date.now())]);return !!row&&row.count<=limit;}
