@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cruising-with-wendy",
+  "account_id": "80320ac2d42d2bfe819d26fc24290d7b",
   "main": "worker.ts",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": [
@@ -11,13 +12,13 @@
   "vars": {
     "SITE_PUBLIC": "false",
     "ACCESS_MODE": "private",
-    "SITE_ORIGIN": "https://example.invalid"
+    "SITE_ORIGIN": "https://cruising-with-wendy.kmvbcbwmw2.workers.dev"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "cruising-with-wendy",
-      "database_id": "00000000-0000-4000-8000-000000000000",
+      "database_id": "2054652f-238d-4698-9bcf-83483e977b7d",
       "migrations_dir": "drizzle"
     }
   ],
