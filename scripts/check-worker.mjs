@@ -15,7 +15,7 @@ try{
  assert.ok(ready,"Local Worker did not start");
  let response=await request("/");
  if(publicSite&&!process.env.TEST_EMPTY_RESTORE){
-  assert.equal(response.status,200,response.text.slice(0,500));assert.ok(response.text.includes("Come aboard."));assert.ok(response.text.includes("Cruise news making waves"));assert.ok(!response.headers.location);assert.ok(!response.headers['x-robots-tag']);
+  assert.equal(response.status,200,response.text.slice(0,500));assert.ok(response.text.includes("Come aboard."));assert.ok(response.text.includes("Latest cruise news"));assert.ok(!response.headers.location);assert.ok(!response.headers['x-robots-tag']);
   for(const path of ['/news','/guides','/essentials','/about','/read/your-first-cruise-a-simple-planning-checklist']){response=await request(path);assert.equal(response.status,200,path+': '+response.text.slice(0,200));assert.ok(!response.headers.location);}
   response=await request('/',{headers:{'User-Agent':'facebookexternalhit/1.1'}});assert.equal(response.status,200);assert.ok(response.text.includes('property="og:title"'));assert.ok(response.text.includes('/brand/wendy-logo.webp'));assert.ok(!response.text.includes('Site administrator password'));
   response=await request('/robots.txt');assert.equal(response.status,200);assert.ok(response.text.includes('Disallow: /admin'));assert.ok(!response.text.includes('Disallow: /\n'));

@@ -58,7 +58,8 @@ export async function feature(id:string){const db=getDb();await db.batch([db.upd
 export async function remove(id:string){const db=getDb(),item=(await db.select().from(content).where(eq(content.id,id)).limit(1))[0];if(!item)return;if(item.kind==="news"){await setStatus(id,"archived");return;}await db.batch([db.delete(revisions).where(eq(revisions.contentId,id)),db.delete(content).where(eq(content.id,id))]);}
 export async function restoreDraft(revisionId:string){const saved=(await getDb().select().from(revisions).where(eq(revisions.id,revisionId)).limit(1))[0];if(!saved)throw Error("Revision not found.");const old=JSON.parse(saved.snapshot) as Entry;return addDraft(inputSchema.parse({...old,kind:old.kind,sources:parseSources(old.sources),ai:!!old.ai,slug:old.slug+"-restored"}),"revision:"+saved.contentId);}
 export async function revisionList(id:string){return getDb().select().from(revisions).where(eq(revisions.contentId,id)).orderBy(desc(revisions.createdAt)).limit(20);}
-export const trustedSources=[
+export type NewsSource={name:string;line:string;url:string;hosts:string[];additionalUrls?:string[];feedUrls?:string[];feedHosts?:string[];publisher?:boolean};
+export const trustedSources:NewsSource[]=[
  {name:"TUI / Marella",line:"marella",url:"https://www.tuigroup.com/en/newsroom/tui-uki",hosts:["tuigroup.com","tui.co.uk"]},
  {name:"P&O Cruises",line:"po",url:"https://www.pocruises.com/press",hosts:["pocruises.com","carnivalukcareers.co.uk"]},
  {name:"MSC Cruises press office",line:"msc",url:"https://www.mscpressarea.com/en_INT/press-releases/",hosts:["mscpressarea.com","msccruises.co.uk","msccruises.com"]},
@@ -69,6 +70,9 @@ export const trustedSources=[
  {name:"Celebrity Cruises official updates",line:"celebrity",url:"https://www.celebritycruises.com/captains-club/newsletter",additionalUrls:["https://royalcaribbeangrouppresscenter.com/celebrity/"],hosts:["celebritycruises.com","royalcaribbeangrouppresscenter.com"]},
  {name:"Holland America Line newsroom",line:"holland-america",url:"https://www.hollandamerica.com/en/us/newsroom",hosts:["hollandamerica.com"]},
  {name:"Virgin Voyages press office",line:"virgin-voyages",url:"https://www.virginvoyages.com/press/latest-releases",additionalUrls:["https://www.virginvoyages.com/ahoy/stories"],hosts:["virginvoyages.com"]},
+ {name:"Carnival Cruise Line newsroom",line:"carnival",url:"https://www.carnival-news.com/news",hosts:["carnival-news.com"]},
+ {name:"Viking press centre",line:"viking",url:"https://www.viking.com/press/index.html",hosts:["viking.com","vikingcruises.com"]},
+ {name:"Breaking Travel News",line:"general",url:"https://www.breakingtravelnews.com/news/category/cruise/",feedUrls:["https://feeds.feedburner.com/breakingtravelnews/news/cruise"],feedHosts:["feeds.feedburner.com"],hosts:["breakingtravelnews.com"],publisher:true},
 ];
 export function trusted(url:string){try{const hostname=new URL(url).hostname.toLowerCase();return trustedSources.some(s=>s.hosts.some(h=>hostname===h||hostname.endsWith("."+h)));}catch{return false;}}
 export async function ingestNews(inputs:Input[]){

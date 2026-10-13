@@ -1,6 +1,7 @@
 import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Anchor, Palmtree, Luggage } from "lucide-react";
 import { publicEntries, setting } from "@/lib/content";
 import { absolute, LINES, dateLabel } from "@/lib/site";
+import { NewsTicker } from "@/components/news-ticker";
 import { NewsFeed } from "@/components/news-feed";
 import { Empty, WaveDivider } from "@/components/site-shell";
 
@@ -39,17 +40,18 @@ export default async function Home(){
   </section>
   <section className="section">
    <div className="section-head">
-    <div><p className="eyebrow"><Waves size={17}/> FRESH FROM THE HORIZON</p><h2>Cruise news making waves</h2></div>
+    <div><p className="eyebrow"><Waves size={17}/> FRESH FROM THE HORIZON</p><h2>Latest cruise news</h2></div>
     <a href="/news" className="text-link section-link">All cruise news <ArrowRight size={18}/></a>
    </div>
    <p className="section-intro">New ships, sunny escapes and stories from the sea. Follow each one straight to the source.</p>
+   <NewsTicker items={latest.items.filter(item=>item.sourceName==="Breaking Travel News").map(({id,title,sourceUrl})=>({id,title,sourceUrl}))}/>
    {latest.items.length?<NewsFeed items={latest.items} affiliateLinks={affiliateLinks}/>:<Empty title="A fresh horizon is on its way" text="New, sourced cruise news will appear here as it is collected."/>}
    <p className="update-note"><span className="status-dot"/> {lastRefresh?"Last checked "+dateLabel(lastRefresh)+", "+new Date(lastRefresh).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/London"}):"News collection is being set up"} · News updates automatically every three hours · Source dates shown on each story</p>
   </section>
   <section className="section line-section">
    <div className="section-head">
     <div><p className="eyebrow"><Ship size={17}/> FIND YOUR KIND OF CRUISE</p><h2>Which way will you sail?</h2></div>
-    <span className="section-head-note">Ten cruise lines. Plenty of possibilities.</span>
+    <span className="section-head-note">Twelve cruise lines. Plenty of possibilities.</span>
    </div>
    <div className="line-grid">{LINES.map((l,i)=><a className={"line-card line-card-"+l.slug} key={l.slug} href={"/cruise-lines/"+l.slug}>
     <span className="line-card-doodle" aria-hidden="true">{i%4===0?<Sun size={57}/>:i%4===1?<Anchor size={57}/>:i%4===2?<Compass size={57}/>:<Palmtree size={57}/>}</span>
