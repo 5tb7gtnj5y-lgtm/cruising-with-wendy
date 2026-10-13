@@ -103,3 +103,27 @@ assert.ok((await content.allContent()).length>=savedBefore.length);const q=queue
 context.fetch=async()=>new Response("Blocked",{status:403});const beforeFailure=(await content.allContent()).map(x=>JSON.stringify(x)).sort();const failed=await collector.runNewsRefresh(env);assert.equal(failed.failures.length,10);assert.deepEqual((await content.allContent()).map(x=>JSON.stringify(x)).sort(),beforeFailure);assert.ok((await content.setting("last_error")).includes("source could not be read"));
 await content.setSetting("collector_lock",String(Date.now()+60000));assert.equal((await collector.runNewsRefresh(env)).busy,true);
 console.log("PASS: collector pause, date validation, approved hosts, review-only imports, duplicate/archived suppression, concurrent-run lease and failure preservation.");
+
+const nativeAdmin=await get('lib/admin-data.ts'),adminResponse=await get('lib/admin-response.ts');
+const adminCookie=session.sessionCookie(await session.createSession(DB));
+const nativeRequest=(query='',cookie=adminCookie)=>new Request('https://example.invalid/api/admin'+query,{headers:{cookie}});
+assert.equal((await nativeAdmin.adminData(nativeRequest('', ''),env)).status,401);
+assert.equal((await nativeAdmin.adminData(new Request('https://example.invalid/api/admin',{headers:{'oai-authenticated-user-id':'owner'}}),env)).status,401);
+const snapshotBefore=(await content.allContent()).map(x=>JSON.stringify(x)).sort();
+let nativeResponse=await nativeAdmin.adminData(nativeRequest(),env);assert.equal(nativeResponse.status,200);const nativeState=await nativeResponse.json(),expectedState=await content.state();
+assert.deepEqual(nativeState.items,expectedState.items);assert.deepEqual(nativeState.analytics,expectedState.analytics);assert.deepEqual(nativeState.history,expectedState.history);assert.equal(nativeState.paused,expectedState.paused);assert.equal(nativeState.lastRefresh,expectedState.lastRefresh);assert.equal(nativeState.indexing,expectedState.indexing);
+const exported=await (await nativeAdmin.adminData(nativeRequest('?export=1'),env)).json();assert.equal(exported.content.length,expectedState.items.length);assert.ok(Array.isArray(exported.settings)&&Array.isArray(exported.revisions));
+const nativeRevisions=await (await nativeAdmin.adminData(nativeRequest('?revisions='+encodeURIComponent(id)),env)).json();assert.deepEqual(nativeRevisions,await content.revisionList(id));
+await content.setSetting('affiliate_links','broken-json');nativeResponse=await nativeAdmin.adminData(nativeRequest(),env);assert.equal(nativeResponse.status,200);assert.deepEqual((await nativeResponse.json()).affiliateLinks,[]);assert.equal(await content.setting('affiliate_links'),'broken-json');await content.setSetting('affiliate_links','[]');
+assert.deepEqual((await content.allContent()).map(x=>JSON.stringify(x)).sort(),snapshotBefore);
+const missing=new DatabaseSync(':memory:');
+class MissingStatement{constructor(q,values=[]){this.q=q;this.values=values;}bind(...values){return new MissingStatement(this.q,values);}async first(){return missing.prepare(this.q).get(...this.values)||null;}async run(){missing.prepare(this.q).run(...this.values);return {success:true};}}
+const missingDb={prepare:q=>new MissingStatement(q),async batch(statements){return statements.map(s=>({success:true,results:missing.prepare(s.q).all(...s.values)}));}};
+const missingCookie=session.sessionCookie(await session.createSession(missingDb));const missingResult=await nativeAdmin.adminData(nativeRequest('',missingCookie),{DB:missingDb});assert.equal(missingResult.status,503);assert.equal((await missingResult.json()).code,'database_setup');assert.equal(missing.prepare("SELECT count(*) AS n FROM admin_sessions").get().n,1);
+assert.equal((await nativeAdmin.adminData(nativeRequest(),{})).status,503);
+await assert.rejects(()=>adminResponse.readAdminResponse(new Response('',{status:500})),/news service/);
+await assert.rejects(()=>adminResponse.readAdminResponse(new Response('')),/incomplete response/);
+await assert.rejects(()=>adminResponse.readAdminResponse(new Response('<html>error</html>',{status:503})),/news service/);
+await assert.rejects(()=>adminResponse.readAdminResponse(Response.json({error:'Database setup incomplete'},{status:503})),/Database setup incomplete/);
+assert.equal(JSON.stringify(await adminResponse.readAdminResponse(Response.json({items:[]}))),JSON.stringify({items:[]}));
+console.log('PASS: native dashboard state, export and revisions match saved data; anonymous/spoofed requests are rejected, malformed affiliate settings preserve news, missing database setup produces readable JSON, and empty/non-JSON replies produce a useful error.');
