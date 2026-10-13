@@ -3,6 +3,7 @@ import {validSession} from "./lib/session";
 import {runNewsRefresh} from "./lib/news-refresh";
 import {handleSignIn,handleSignOut,loginPage} from "./lib/worker-login";
 import {adminData} from "./lib/admin-data";
+import {restoreBackup} from "./lib/backup-restore";
 export default {
  async fetch(request:Request,env:Cloudflare.Env,ctx:ExecutionContext){
   const url=new URL(request.url);if(url.protocol!=="https:"){url.protocol="https:";return Response.redirect(url.href,308);}
@@ -11,6 +12,7 @@ export default {
   if(path==="/api/admin/sign-in")return handleSignIn(request,env);
   if(path==="/api/admin/session")return handleSignOut(request,env);
   if(path==="/api/admin"&&request.method==="GET")return adminData(request,env);
+  if(path==="/admin/restore")return restoreBackup(request,env);
   const login=path==="/admin/login"||path==="/api/admin/session",asset=/^\/(assets\/|_next\/static\/|_vinext\/)/.test(path)||/\.(svg|png|jpe?g|webp|avif|ico)$/.test(path),system=path.startsWith("/api/system/");
   if(asset&&env.ASSETS){const response=await env.ASSETS.fetch(request);if(response.status!==404)return response;}
   if(env.ACCESS_MODE!=="public"&&!login&&!asset&&!system){
