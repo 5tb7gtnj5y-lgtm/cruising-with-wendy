@@ -1,0 +1,3 @@
+export function sectionId(text:string){return text.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
+export function ArticleBody({text}:{text:string}){return <div className="article-body">{text.split(/\n\s*\n/).map((block,index)=>{if(block.startsWith("## ")){const lines=block.split("\n"),title=lines[0].slice(3);return <section key={index}><h2 id={sectionId(title)}>{title}</h2>{lines.slice(1).length>0&&<p>{lines.slice(1).join(" ")}</p>}</section>;}if(block.startsWith("- "))return <ul key={index}>{block.split("\n").map((line,i)=><li key={i}>{line.replace(/^- /,"")}</li>)}</ul>;return <p key={index}>{block}</p>;})}</div>;}
+
