@@ -5,7 +5,6 @@ import { publicEntries, bySlug, setting, trustedSources } from "@/lib/content";
 import { LINES, lineName, absolute, jsonLd, isPublic, dateLabel, parseSources } from "@/lib/site";
 import { PageHeading, Empty } from "@/components/site-shell";
 import { Card } from "@/components/cards";
-import { NewsTicker } from "@/components/news-ticker";
 import { NewsFeed } from "@/components/news-feed";
 import { ArticleBody, sectionId } from "@/components/article-body";
 import { Share } from "@/components/share";
@@ -33,11 +32,10 @@ export default async function Page({params,searchParams}:Props){
  const line=key==="cruise-lines"&&path.length===2?LINES.find(x=>x.slug===path[1]):undefined;
  if((["news","articles","guides"].includes(key)&&path.length===1)||line){
   const kind=line?single(query.type):key==="articles"?"article":key==="guides"?"guide":"news",lineFilter=line?.slug||single(query.line),route="/"+path.join("/");
-  const [result,affiliateLinks,tickerNews]=await Promise.all([publicEntries({q:single(query.q),line:lineFilter,kind,ship:single(query.ship),destination:single(query.destination),page:parseInt(single(query.page)||"1",10)||1,all:key==="news"}),key==="news"?setting("affiliate_links","[]"):Promise.resolve("[]"),key==="news"?publicEntries({kind:"news",all:true}):Promise.resolve(null)]);
+  const [result,affiliateLinks]=await Promise.all([publicEntries({q:single(query.q),line:lineFilter,kind,ship:single(query.ship),destination:single(query.destination),page:parseInt(single(query.page)||"1",10)||1,all:key==="news"}),key==="news"?setting("affiliate_links","[]"):Promise.resolve("[]")]);
   const source=line?trustedSources.find(x=>x.line===line.slug):null;
   function pageLink(page:number){const p=new URLSearchParams();for(const[k,v]of Object.entries(query))if(typeof v==="string"&&v&&k!=="page")p.set(k,v);p.set("page",String(page));return route+"?"+p.toString();}
   return <main id="main" className="page-container">{line?<div className="page-heading line-feature"><div className="line-monogram" style={{background:line.color}}>{line.mark}</div><div><p className="eyebrow">EXPLORE YOUR CRUISE LINE</p><h1>{line.name}</h1><p className="section-intro">{line.description} News, guides and ideas, all in one place.</p></div></div>:<PageHeading label={key==="articles"?"MORE THAN A HEADLINE":key==="guides"?"MAKE THE MOST OF YOUR JOURNEY":"FRESH FROM THE HORIZON"} title={titles[key][0]} description={titles[key][1]}/>}
-   {key==="news"&&<NewsTicker items={(tickerNews?.items||[]).filter(item=>item.sourceName==="Breaking Travel News").map(({id,title,sourceUrl})=>({id,title,sourceUrl}))}/> }
    {source&&<div className="newsroom-link"><Compass size={25} strokeWidth={1.3}/><div><strong>Go straight to the source</strong><p>For current announcements, visit the official newsroom.</p></div><a className="text-link" href={source.url} target="_blank" rel="noopener noreferrer">Official newsroom <ArrowUpRight size={16}/></a></div>}
    <Filters route={route} query={query} line={line?.slug} kind={key==="articles"?"article":key==="guides"?"guide":key==="news"?"news":undefined}/><p className="results-note">{result.total} {result.total===1?"story":"stories"}{single(query.q)&&" matching “"+single(query.q)+"”"} · External news opens at the publisher</p>
    {result.items.length?(key==="news"?<NewsFeed items={result.items} affiliateLinks={affiliateLinks}/>:<div className="card-grid">{result.items.map(x=><Card key={x.id} item={x}/>)}</div>):<Empty title={single(query.q)?"No matching stories just yet":"There’s more on the horizon"} text={single(query.q)?"Try a shorter search, a different ship name or fewer filters.":"Original articles and guides appear here once they have been reviewed and published."} href="/news" label="Explore the latest cruise news"/>}

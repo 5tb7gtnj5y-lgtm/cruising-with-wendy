@@ -1,7 +1,6 @@
 import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Anchor, Palmtree, Luggage } from "lucide-react";
 import { publicEntries, setting } from "@/lib/content";
 import { absolute, LINES, dateLabel } from "@/lib/site";
-import { NewsTicker } from "@/components/news-ticker";
 import { NewsFeed } from "@/components/news-feed";
 import { Empty, WaveDivider } from "@/components/site-shell";
 
@@ -44,7 +43,6 @@ export default async function Home(){
     <a href="/news" className="text-link section-link">All cruise news <ArrowRight size={18}/></a>
    </div>
    <p className="section-intro">New ships, sunny escapes and stories from the sea. Follow each one straight to the source.</p>
-   <NewsTicker items={latest.items.filter(item=>item.sourceName==="Breaking Travel News").map(({id,title,sourceUrl})=>({id,title,sourceUrl}))}/>
    {latest.items.length?<NewsFeed items={latest.items} affiliateLinks={affiliateLinks}/>:<Empty title="A fresh horizon is on its way" text="New, sourced cruise news will appear here as it is collected."/>}
    <p className="update-note"><span className="status-dot"/> {lastRefresh?"Last checked "+dateLabel(lastRefresh)+", "+new Date(lastRefresh).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/London"}):"News collection is being set up"} · News updates automatically every three hours · Source dates shown on each story</p>
   </section>

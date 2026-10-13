@@ -74,7 +74,7 @@ await content.setSetting("paused","true");assert.equal((await (await invoke({new
 console.log("PASS: administrator authorization, CSRF, safe URLs, draft isolation, stale edits, revision approval, publication, search, exact duplicates, news suppression, approved sources, scheduling, sitemap, robots, daily draft limits and pause.");
 
 
-const { renderToStaticMarkup }=await import("react-dom/server");const {createElement}=await import("react");
+const { renderToStaticMarkup }=await import("react-dom/server");
 const seed=await get("lib/seed.ts");await seed.initialise();
 const archiveFixtures=Array.from({length:17},(_,i)=>content.inputSchema.parse({...news,title:`Archive fixture cruise announcement ${i+1}`,sourceUrl:`https://www.tuigroup.com/en/newsroom/news/feed-check-${i+1}`,publishedAt:"2026-10-11T00:00:00Z"}));
 await content.ingestNews(archiveFixtures);
@@ -160,7 +160,20 @@ const camelBackup=await (await nativeAdmin.adminData(nativeRequest('?export=1',r
 recoverySqlite.exec("CREATE TRIGGER fail_restore BEFORE INSERT ON content WHEN NEW.id='restore-fail' BEGIN SELECT RAISE(ABORT,'fixture restore failure'); END;");const countBefore=recoverySqlite.prepare('SELECT count(*) AS n FROM audit').get().n;assert.equal((await restore.restoreBackup(restoreRequest({...backupJSON,content:[{...backupJSON.content[0],id:'restore-first',slug:'restore-first',source_url:''},{...backupJSON.content[0],id:'restore-fail',slug:'restore-fail',source_url:''}]}),{DB:recoveryDB})).status,503);assert.deepEqual(recoverySqlite.prepare('SELECT * FROM content ORDER BY id').all(),preserved);assert.equal(recoverySqlite.prepare('SELECT count(*) AS n FROM audit').get().n,countBefore);
 console.log('PASS: authenticated backup upload repairs an auth-only database, restores all 33 records exactly, stays under 30 D1 queries, rejects anonymous/cross-site/invalid uploads, preserves newer edits/archived suppression/pause/sessions, ignores secret settings, accepts dashboard exports and rolls back failed content writes.');
 
-const rss=await get('lib/rss.ts'),ticker=await get('components/news-ticker.tsx');
+const rss=await get('lib/rss.ts');
 const parsed=rss.parseRss(fs.readFileSync('scripts/fixtures/breaking-cruise-rss.xml','utf8'));assert.ok(parsed.length>=5);assert.ok(parsed.every(item=>item.url.startsWith('https://www.breakingtravelnews.com/news/article/')));assert.equal(rss.rssText('Sea &amp; sunshine &#8217; <![CDATA[cruise]]>'),'Sea & sunshine ’ cruise');assert.equal(rss.parseRss('<!DOCTYPE rss><rss><item><title>Unsafe</title></item></rss>').length,0);
-const savedTicker=(await content.publicEntries({kind:'news',all:true})).items.filter(x=>x.sourceName==='Breaking Travel News');assert.ok(savedTicker.length>=1);const tickerHtml=renderToStaticMarkup(createElement(ticker.NewsTicker,{items:savedTicker}));assert.ok(tickerHtml.includes('ticker-track'));assert.ok(tickerHtml.includes('Pause scrolling news'));assert.ok(tickerHtml.includes('aria-hidden="true"'));assert.ok(tickerHtml.includes('tabindex="-1"'));assert.ok(tickerHtml.includes('https://www.breakingtravelnews.com/news/article/'));assert.ok(!renderToStaticMarkup(createElement(ticker.NewsTicker,{items:[{id:'unsafe',title:'Unsafe link',sourceUrl:'https://breakingtravelnews.com.attacker.invalid/news/article/story/'}]})).includes('attacker.invalid'));
-console.log('PASS: cruise RSS items parse correctly; headline links are safe, ticker renders alongside news cards, duplicate track stays out of keyboard navigation, pause control is accessible and forged publisher domains are excluded.');
+
+assert.ok(!homeHtml.includes('news-ticker'));assert.ok(!feedHtml.includes('news-ticker'));
+console.log('PASS: RSS news cards remain enabled and the scrolling breaking-news strip is absent from home and news pages.');
+
+const photos=await get('lib/news-photos.ts');
+const samplePhoto=(title,line='general')=>photos.newsPhoto({sourceUrl:'https://www.breakingtravelnews.com/news/article/'+title.toLowerCase().replaceAll(' ','-'),line,title});
+assert.equal(samplePhoto('Atlas Antarctica season').src,'/photos/antarctic-iceberg.webp');
+assert.equal(samplePhoto('Virgin Voyages Caribbean sale').src,'/photos/virgin-resilient-lady.webp');
+assert.equal(samplePhoto('Holland America Alaska sailings').src,'/photos/alaska-fjord.webp');
+assert.equal(samplePhoto('New Egypt riverboat').src,'/photos/river-nile.webp');
+assert.equal(samplePhoto('Carnival Freedom dry dock').src,'/photos/carnival-freedom.webp');
+const lineImages=Array.from(utilities.CRUISE_LINE_SLUGS,line=>samplePhoto('Latest fleet announcement',line));assert.equal(new Set(lineImages.map(x=>x.src)).size,12);
+for(const photo of lineImages){assert.ok(photo.src.startsWith('/photos/'));assert.ok(fs.existsSync('public'+photo.src));assert.ok(photo.credit&&photo.license&&photo.creditUrl);}
+const fallbackItems=Array.from({length:20},(_,i)=>samplePhoto('Cruise travel news '+i));assert.ok(new Set(fallbackItems.map(x=>x.src)).size>=3);assert.deepEqual(samplePhoto('Cruise travel news 1'),samplePhoto('Cruise travel news 1'));
+console.log('PASS: photos match ship, brand and destination; all twelve lines have locally served photos with credits, and unmatched stories get varied stable cruise photos.');
