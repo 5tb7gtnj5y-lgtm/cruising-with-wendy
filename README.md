@@ -18,7 +18,7 @@ The Cron Trigger does **not** write original AI articles or fact-check newsroom 
 2. Run `pnpm install --frozen-lockfile` and `npm run check`, then `npm run typecheck`.
 3. In your Cloudflare dashboard, register/find your Workers subdomain. Your URL will be `https://cruising-with-wendy.YOUR-SUBDOMAIN.workers.dev`.
 4. Run `npm run setup` in an interactive terminal. It opens Cloudflare's normal sign-in, selects your account, asks for the exact destination URL, creates a new D1 database, applies migrations, imports the backup and reads every saved row back for comparison. It asks for your new admin password with hidden input and stores only the password hash and a new update token as Cloudflare Worker secrets.
-5. Open the deployed `/admin/login`, sign in, and check the saved content. Test sign-out and confirm that private pages require sign-in. Confirm a scheduled collector run in Cloudflare Worker logs and review its candidates. Some primary sites block automated access; the collector reports these honestly and preserves saved data.
+5. Open the deployed `/admin/login`, sign in, and check the saved content. Test sign-out and confirm that private pages require sign-in. Confirm a scheduled collector run in Cloudflare Worker logs. Validated, dated news links publish automatically; original articles and guides require approval. Some primary sites block automated access; the collector reports these honestly and preserves saved data.
 
 The initial deployment is **private**, matching the existing Site. If you choose to launch publicly later, set `ACCESS_MODE` to `public` and `SITE_PUBLIC` to `true` in `wrangler.jsonc`, then run `npm run deploy`. Administrator and service API routes remain protected.
 
@@ -29,6 +29,10 @@ Setup never overwrites a populated nonmatching database. Re-running setup resets
 Create a new **private** repository named `cruising-with-wendy`. Upload/commit this source after setup has filled the real account/database/origin values. Keep `transfer-data/`, `.dev.vars*`, `.env*`, `node_modules`, `.wrangler` and `dist` out of GitHub; `.gitignore` excludes them. The transfer backup contains site history and belongs with your private backups.
 
 In Cloudflare Workers & Pages, connect that repository through Workers Builds. Use build command `pnpm install --frozen-lockfile && npm run build`, and deploy command `npx wrangler deploy --config dist/server/wrangler.json`. Keep `ADMIN_PASSWORD_HASH` and `UPDATE_TOKEN` as runtime secrets in Cloudflare, never as committed files or client variables. A normal deployment preserves D1 data; apply future D1 migrations deliberately.
+
+## Automatic news links
+
+The Worker checks the approved primary newsrooms every three hours and publishes dated news links automatically. Homepage and news visits catch up an overdue check in the background. Duplicate links, archived suppressions and administrator-edited drafts are preserved. Only untouched old collector news drafts can be published after their source is revalidated. Pause stops both collection and researched imports. Fetches are bounded and publication uses a single guarded database statement per link. Failed sources leave existing content in place.
 
 ## Researched automatic updates
 

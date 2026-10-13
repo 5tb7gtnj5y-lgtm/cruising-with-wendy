@@ -1,6 +1,6 @@
 import handler from "vinext/server/fetch-handler";
 import {validSession} from "./lib/session";
-import {runNewsRefresh} from "./lib/news-refresh";
+import {runNewsRefresh,refreshNewsIfDue} from "./lib/news-refresh";
 import {handleSignIn,handleSignOut,loginPage} from "./lib/worker-login";
 import {adminData} from "./lib/admin-data";
 import {restoreBackup} from "./lib/backup-restore";
@@ -28,6 +28,7 @@ export default {
     return new Response(null,{status:303,headers:{Location:"/admin/login","Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
    }
   }
+  if(request.method==="GET"&&(path==="/"||path==="/news"))ctx.waitUntil(refreshNewsIfDue(env).catch(()=>{console.error("Wendy automatic news check failed; saved content preserved");}));
   const response=await handler.fetch(request,env,ctx),headers=new Headers(response.headers);
   headers.set("X-Content-Type-Options","nosniff");headers.set("Referrer-Policy","strict-origin-when-cross-origin");
   if(env.ACCESS_MODE!=="public"||path.startsWith("/admin")||path.startsWith("/api/")){headers.set("Cache-Control","private, no-store");headers.set("X-Robots-Tag","noindex, nofollow");}else if(env.SITE_PUBLIC!=="true")headers.set("X-Robots-Tag","noindex, nofollow");
