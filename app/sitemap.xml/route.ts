@@ -1,0 +1,4 @@
+import { publicEntries } from "@/lib/content";import { absolute, LINES } from "@/lib/site";export const dynamic="force-dynamic";
+const escape=(s:string)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+export async function GET(){const {items}=await publicEntries({limit:1000});const pages=["/","/news","/articles","/guides","/about","/essentials","/privacy","/affiliate-disclosure",...LINES.map(x=>"/cruise-lines/"+x.slug)];const links=[...pages.map(p=>"<url><loc>"+escape(absolute(p))+"</loc></url>"),...items.filter(x=>x.kind!=="news").map(x=>"<url><loc>"+escape(absolute("/read/"+x.slug))+"</loc><lastmod>"+x.updatedAt+"</lastmod></url>")];return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+links.join("")+'</urlset>',{headers:{"Content-Type":"application/xml; charset=utf-8","Cache-Control":"public, max-age=300"}});}
+
