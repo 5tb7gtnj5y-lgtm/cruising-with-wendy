@@ -15,9 +15,18 @@ export default {
   if(path==="/admin/restore")return restoreBackup(request,env);
   const login=path==="/admin/login"||path==="/api/admin/session",asset=/^\/(assets\/|_next\/static\/|_vinext\/)/.test(path)||/\.(svg|png|jpe?g|webp|avif|ico)$/.test(path),system=path.startsWith("/api/system/");
   if(asset&&env.ASSETS){const response=await env.ASSETS.fetch(request);if(response.status!==404)return response;}
-  if(env.ACCESS_MODE!=="public"&&!login&&!asset&&!system){
-   let signedIn=false;try{signedIn=await validSession(env.DB,request.headers.get("cookie"));}catch{return new Response(null,{status:303,headers:{Location:"/admin/login?error=database","Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});}
-   if(!signedIn)return new Response(null,{status:303,headers:{Location:"/admin/login","Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
+  // Public reading never requires a session. Administration always does,
+  // independently of the site's publishing/access configuration.
+  const protectedAdmin=path==="/admin"||path.startsWith("/admin/")||path==="/api/admin"||path.startsWith("/api/admin/");
+  if(protectedAdmin||(env.ACCESS_MODE!=="public"&&!login&&!asset&&!system)){
+   let signedIn=false;try{signedIn=await validSession(env.DB,request.headers.get("cookie"));}catch{
+    if(path.startsWith("/api/"))return Response.json({error:"The administrator session service is unavailable."},{status:503,headers:{"Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
+    return new Response(null,{status:303,headers:{Location:"/admin/login?error=database","Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
+   }
+   if(!signedIn){
+    if(path.startsWith("/api/"))return Response.json({error:"Administrator sign-in required."},{status:401,headers:{"Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
+    return new Response(null,{status:303,headers:{Location:"/admin/login","Cache-Control":"private, no-store","X-Robots-Tag":"noindex, nofollow"}});
+   }
   }
   const response=await handler.fetch(request,env,ctx),headers=new Headers(response.headers);
   headers.set("X-Content-Type-Options","nosniff");headers.set("Referrer-Policy","strict-origin-when-cross-origin");

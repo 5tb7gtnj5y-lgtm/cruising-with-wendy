@@ -10,8 +10,8 @@
   "workers_dev": true,
   "preview_urls": false,
   "vars": {
-    "SITE_PUBLIC": "false",
-    "ACCESS_MODE": "private",
+    "SITE_PUBLIC": "true",
+    "ACCESS_MODE": "public",
     "SITE_ORIGIN": "https://cruising-with-wendy.kmvbcbwmw2.workers.dev"
   },
   "d1_databases": [

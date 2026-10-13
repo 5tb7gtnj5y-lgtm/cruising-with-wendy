@@ -5,14 +5,26 @@ import https from "node:https";
 import {spawn} from "node:child_process";
 import {randomBytes,pbkdf2Sync,createHmac} from "node:crypto";
 const password=randomBytes(24).toString("hex"),salt=randomBytes(16),hash=`pbkdf2-sha256$100000$${salt.toString("hex")}$${pbkdf2Sync(password,salt,100000,32,"sha256").toString("hex")}`;
+const publicSite=process.env.TEST_PUBLIC!=="false";
 const port=8791,origin=`https://127.0.0.1:${port}`,token=randomBytes(32).toString("hex");
-const child=spawn(process.execPath,["node_modules/wrangler/bin/wrangler.js","dev","--config","dist/server/wrangler.json","--local","--persist-to",process.env.TEST_D1_DIR||".wrangler/state","--ip","127.0.0.1","--port",String(port),"--local-protocol","https","--upstream-protocol","https","--inspector-port","0","--var",`ADMIN_PASSWORD_HASH:${hash}`,"--var",`UPDATE_TOKEN:${token}`,"--var",`SITE_ORIGIN:${origin}`],{stdio:["ignore","pipe","pipe"]});
+const child=spawn(process.execPath,["node_modules/wrangler/bin/wrangler.js","dev","--config","dist/server/wrangler.json","--local","--persist-to",process.env.TEST_D1_DIR||".wrangler/state","--ip","127.0.0.1","--port",String(port),"--local-protocol","https","--upstream-protocol","https","--inspector-port","0","--var",`ADMIN_PASSWORD_HASH:${hash}`,"--var",`UPDATE_TOKEN:${token}`,"--var",`SITE_ORIGIN:${origin}`,"--var",`ACCESS_MODE:${publicSite?"public":"private"}`,"--var",`SITE_PUBLIC:${publicSite?"true":"false"}`],{stdio:["ignore","pipe","pipe"]});
 let log="";child.stdout.on("data",chunk=>log+=chunk.toString());child.stderr.on("data",chunk=>log+=chunk.toString());
 const request=(path,{method="GET",headers={},body=""}={})=>new Promise((resolve,reject)=>{const req=https.request(origin+path,{method,headers,rejectUnauthorized:false},res=>{let text="";res.on("data",chunk=>text+=chunk);res.on("end",()=>resolve({status:res.statusCode,headers:res.headers,text}));});req.on("error",reject);req.end(body);});
 try{
  let ready=false;for(let n=0;n<80;n++){try{await request("/admin/login");ready=true;break;}catch{if(child.exitCode!==null)break;await new Promise(r=>setTimeout(r,250));}}
  assert.ok(ready,"Local Worker did not start");
- let response=await request("/");assert.equal(response.status,303);assert.equal(response.headers.location,"/admin/login");
+ let response=await request("/");
+ if(publicSite&&!process.env.TEST_EMPTY_RESTORE){
+  assert.equal(response.status,200,response.text.slice(0,500));assert.ok(response.text.includes("Come aboard."));assert.ok(response.text.includes("Cruise news making waves"));assert.ok(!response.headers.location);assert.ok(!response.headers['x-robots-tag']);
+  for(const path of ['/news','/guides','/essentials','/about','/read/your-first-cruise-a-simple-planning-checklist']){response=await request(path);assert.equal(response.status,200,path+': '+response.text.slice(0,200));assert.ok(!response.headers.location);}
+  response=await request('/',{headers:{'User-Agent':'facebookexternalhit/1.1'}});assert.equal(response.status,200);assert.ok(response.text.includes('property="og:title"'));assert.ok(response.text.includes('/brand/wendy-logo.webp'));assert.ok(!response.text.includes('Site administrator password'));
+  response=await request('/robots.txt');assert.equal(response.status,200);assert.ok(response.text.includes('Disallow: /admin'));assert.ok(!response.text.includes('Disallow: /\n'));
+  response=await request('/sitemap.xml');assert.equal(response.status,200);assert.ok(response.text.includes('/news'));assert.ok(!response.text.includes('/admin'));
+ }else if(!publicSite){assert.equal(response.status,303);assert.equal(response.headers.location,"/admin/login");}
+ for(const path of ['/admin','/admin/restore']){response=await request(path);assert.equal(response.status,303,path);assert.equal(response.headers.location,'/admin/login');}
+ response=await request('/api/admin?export=1');assert.equal(response.status,401);
+ response=await request('/api/admin',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({action:'pause',paused:true})});assert.equal(response.status,401);
+
  response=await request("/admin/login");assert.equal(response.status,200);assert.ok(response.text.includes("Site administrator password"));assert.equal(response.headers['x-wendy-login-version'],'worker-proof-20261013');assert.ok(response.text.includes('nonce='));assert.ok(response.headers['content-security-policy'].includes("frame-ancestors 'none'"));
  assert.equal((await request("/api/system/state")).status,403);
  if(!process.env.TEST_EMPTY_RESTORE){ const stateResponse=await request("/api/system/state",{headers:{"X-Update-Token":token}});assert.equal(stateResponse.status,200,JSON.stringify({status:stateResponse.status,body:stateResponse.text.slice(0,120)}));assert.ok(stateResponse.text.length,"Empty state response: "+log.replaceAll(token,"[redacted]").replaceAll(hash,"[redacted]"));const state=JSON.parse(stateResponse.text);assert.equal(state.items.length,expectedCount);assert.equal(state.items.filter(x=>x.kind==="news").length,expectedNews);
@@ -32,6 +44,6 @@ try{
  response=await request('/api/admin?export=1',{headers:{cookie}});assert.equal(response.status,200);assert.equal(JSON.parse(response.text).content.length,expectedCount);
  response=await request("/",{headers:{cookie}});assert.equal(response.status,200);assert.ok(response.text.includes("Cruising with Wendy"));assert.ok(response.text.includes("Virgin Voyages"));
  response=await request("/api/admin/session",{method:"POST",headers:{Origin:origin,"Content-Type":"application/x-www-form-urlencoded",cookie},body:"action=logout"});assert.equal(response.status,303);assert.equal((await request("/api/admin",{headers:{cookie}})).status,401);
- console.log("PASS: built Cloudflare Worker serves native sign-in, keeps pages private, rejects unauthorised APIs and spoofed identity, reads all restored records, authenticates via browser-derived proof, renders news and revokes sign-out.");
+ console.log("PASS: built Cloudflare Worker serves native sign-in, serves reading pages without sign-in when public, protects admin pages/exports/writes and service tokens, rejects unauthorised APIs and spoofed identity, reads all restored records, authenticates via browser-derived proof, renders news and revokes sign-out.");
 }catch(error){console.error(error.stack);process.exitCode=1;}
 finally{child.kill("SIGTERM");}
