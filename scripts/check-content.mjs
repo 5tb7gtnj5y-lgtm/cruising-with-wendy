@@ -19,7 +19,8 @@ function synthetic(name,namespace){const m=new vm.SyntheticModule(Object.keys(na
 async function moduleFor(id){
  if(cache.has(id))return cache.get(id);
  let m;
- if(id==="cloudflare:workers")m=synthetic(id,{env});
+ if(id.endsWith(".css"))m=synthetic(id,{});
+ else if(id==="cloudflare:workers")m=synthetic(id,{env});
  else if(id==="next/headers")m=synthetic(id,{headers:async()=>requestHeaders});
  else if(id==="next/navigation")m=synthetic(id,{notFound:()=>{throw Error("404");},redirect:p=>{throw Error("Redirect "+p);}});
  else if(!id.startsWith(root))m=synthetic(id,await import(id));
@@ -177,3 +178,22 @@ const lineImages=Array.from(utilities.CRUISE_LINE_SLUGS,line=>samplePhoto('Lates
 for(const photo of lineImages){assert.ok(photo.src.startsWith('/photos/'));assert.ok(fs.existsSync('public'+photo.src));assert.ok(photo.credit&&photo.license&&photo.creditUrl);}
 const fallbackItems=Array.from({length:20},(_,i)=>samplePhoto('Cruise travel news '+i));assert.ok(new Set(fallbackItems.map(x=>x.src)).size>=3);assert.deepEqual(samplePhoto('Cruise travel news 1'),samplePhoto('Cruise travel news 1'));
 console.log('PASS: photos match ship, brand and destination; all twelve lines have locally served photos with credits, and unmatched stories get varied stable cruise photos.');
+
+const seo=await get('lib/seo.ts'),domainRedirect=await get('lib/public-domain.ts');
+const seoOrigin=env.SITE_ORIGIN;env.SITE_ORIGIN='https://cruisingwithwendy.co.uk';
+const homeSEO=await home.generateMetadata();assert.equal(homeSEO.title.absolute,seo.HOME_TITLE);assert.equal(homeSEO.alternates.canonical,'https://cruisingwithwendy.co.uk/');assert.equal(homeSEO.openGraph.url,homeSEO.alternates.canonical);assert.equal(homeSEO.twitter.title,seo.HOME_TITLE);
+const liveNewsSEO=await publicPage.generateMetadata({params:Promise.resolve({path:['news']}),searchParams:Promise.resolve({})});assert.equal(liveNewsSEO.robots.index,true);assert.equal(liveNewsSEO.openGraph.url,'https://cruisingwithwendy.co.uk/news');assert.ok(liveNewsSEO.description.includes('twelve cruise lines'));
+const filteredSEO=await publicPage.generateMetadata({params:Promise.resolve({path:['news']}),searchParams:Promise.resolve({q:['Marella','Viking']})});assert.equal(filteredSEO.robots.index,false);assert.equal(filteredSEO.robots.follow,true);assert.equal(filteredSEO.alternates.canonical,'https://cruisingwithwendy.co.uk/news');assert.ok(!(await robots.GET().text()).includes('Disallow: /*?'));
+const brokenSEO=await publicPage.generateMetadata({params:Promise.resolve({path:['news','missing']}),searchParams:Promise.resolve({})});assert.equal(brokenSEO.robots.index,false);
+for(const line of utilities.LINES){const meta=await publicPage.generateMetadata({params:Promise.resolve({path:['cruise-lines',line.slug]}),searchParams:Promise.resolve({})});assert.ok(meta.title.includes(line.name));assert.equal(meta.openGraph.url,'https://cruisingwithwendy.co.uk/cruise-lines/'+line.slug);}
+const domainEnv={SITE_ORIGIN:env.SITE_ORIGIN,SITE_PUBLIC:'true',ACCESS_MODE:'public'};
+for(const host of ['www.cruisingwithwendy.co.uk','cruising-with-wendy.kmvbcbwmw2.workers.dev'])for(const protocol of ['https:','http:']){const r=domainRedirect.publicDomainRedirect(new Request(protocol+'//'+host+'/news?q=ship&line=viking'),domainEnv);assert.equal(r.status,308);assert.equal(r.headers.get('location'),'https://cruisingwithwendy.co.uk/news?q=ship&line=viking');}
+for(const url of ['https://cruisingwithwendy.co.uk/news','https://unapproved.invalid/news','https://www.cruisingwithwendy.co.uk/admin','https://www.cruisingwithwendy.co.uk/api/system/state'])assert.equal(domainRedirect.publicDomainRedirect(new Request(url),domainEnv),null);
+assert.equal(domainRedirect.publicDomainRedirect(new Request('https://www.cruisingwithwendy.co.uk/news',{method:'POST'}),domainEnv),null);assert.equal(domainRedirect.publicDomainRedirect(new Request('https://www.cruisingwithwendy.co.uk/news',{headers:{'X-Update-Token':'test-only'}}),domainEnv),null);assert.equal(domainRedirect.publicDomainRedirect(new Request('https://www.cruisingwithwendy.co.uk/news'),{...domainEnv,ACCESS_MODE:'private'}),null);
+const sitemapGuideId=await content.addDraft({...input,title:'An older published cruise guide sitemap fixture',publishedAt:'2025-01-01T00:00:00Z'});await content.publish(sitemapGuideId);const guideForSitemap=(await content.publicEntries({kind:'guide',all:true})).items[0];assert.ok(guideForSitemap);
+const insertSEO=sqlite.prepare("INSERT INTO content(id,slug,kind,status,title,excerpt,body,line,source_url,source_name,sources,published_at,created_at,updated_at) VALUES(?,?,'news','published','Sitemap overflow cruise news fixture','A synthetic cruise-news fixture.','','general',?,'Fixture','[]','2026-10-14T00:00:00Z','2026-10-14T00:00:00Z','2026-10-14T00:00:00Z')");
+for(let i=0;i<1005;i++)insertSEO.run('seo-fixture-'+i,'seo-fixture-'+i,'https://www.breakingtravelnews.com/news/article/seo-fixture-'+i);
+const seoMap=await (await sitemap.GET()).text();assert.ok(seoMap.includes('https://cruisingwithwendy.co.uk/read/'+guideForSitemap.slug));assert.ok(!seoMap.includes('/read/seo-fixture-'));assert.ok(!seoMap.includes('/admin'));assert.ok(!seoMap.includes('workers.dev'));assert.ok(seoMap.includes('<lastmod>'));
+const layout=await get('app/layout.tsx'),{createElement}=await import('react');const layoutHtml=renderToStaticMarkup(createElement(layout.default,{children:createElement('main',null,'SEO fixture')}));const graph=JSON.parse(layoutHtml.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)[1]);assert.ok(graph['@graph'].some(x=>x['@type']==='Organization'&&x.logo.url==='https://cruisingwithwendy.co.uk/brand/wendy-logo.webp'));assert.ok(graph['@graph'].some(x=>x['@type']==='WebSite'&&x.url==='https://cruisingwithwendy.co.uk/'));
+env.SITE_ORIGIN=seoOrigin;
+console.log('PASS: canonical-domain SEO, unique social metadata, twelve line pages, crawlable noindex filters, safe permanent redirects, structured website/organisation data, and original-guide sitemap coverage after 1,000+ news items.');

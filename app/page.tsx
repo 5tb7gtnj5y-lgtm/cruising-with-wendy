@@ -1,10 +1,11 @@
 import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Anchor, Palmtree, Luggage } from "lucide-react";
 import { publicEntries, setting } from "@/lib/content";
-import { absolute, LINES, dateLabel } from "@/lib/site";
+import { LINES, dateLabel } from "@/lib/site";
 import { NewsFeed } from "@/components/news-feed";
 import { Empty, WaveDivider } from "@/components/site-shell";
+import {HOME_TITLE,HOME_DESCRIPTION,pageMetadata} from "@/lib/seo";
 
-export async function generateMetadata(){return {alternates:{canonical:absolute("/")}};}
+export async function generateMetadata(){return {...pageMetadata({title:HOME_TITLE,description:HOME_DESCRIPTION,path:"/"}),title:{absolute:HOME_TITLE}};}
 export default async function Home(){
  const [latest,lastRefresh,affiliateLinks]=await Promise.all([
   publicEntries({kind:"news",all:true}),setting("last_refresh"),setting("affiliate_links","[]")

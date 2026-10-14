@@ -4,8 +4,10 @@ import {runNewsRefresh,refreshNewsIfDue} from "./lib/news-refresh";
 import {handleSignIn,handleSignOut,loginPage} from "./lib/worker-login";
 import {adminData} from "./lib/admin-data";
 import {restoreBackup} from "./lib/backup-restore";
+import {publicDomainRedirect} from "./lib/public-domain";
 export default {
  async fetch(request:Request,env:Cloudflare.Env,ctx:ExecutionContext){
+  const canonical=publicDomainRedirect(request,env);if(canonical)return canonical;
   const url=new URL(request.url);if(url.protocol!=="https:"){url.protocol="https:";return Response.redirect(url.href,308);}
   const path=url.pathname;
   if(path==="/admin/login"&&request.method==="GET")return loginPage(request);
