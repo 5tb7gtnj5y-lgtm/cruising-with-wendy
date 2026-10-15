@@ -15,7 +15,7 @@ export function Footer(){return <footer>
  <div className="footer-top">
   <div><a className="brand footer-brand brand-new" href="/" aria-label="Cruising with Wendy home"><img className="brand-logo" src="/brand/wendy-logo.webp" width="1336" height="1177" loading="lazy" alt="Cruising with Wendy"/></a><p>News, thoughtful guides and<br/>a little inspiration for life at sea.</p></div>
   <div><span className="footer-label">Keep exploring</span><a href="/news">Cruise news</a><a href="/guides">Ship & destination guides</a><a href="/essentials">Cruise essentials</a></div>
-  <div><span className="footer-label">Good to know</span><a href="/about">About & editorial policy</a><a href="/privacy">Privacy</a><a href="/affiliate-disclosure">Affiliate disclosure</a><a href="/admin" target="_top">Administrator</a></div>
+  <div><span className="footer-label">Good to know</span><a href="/about">About & editorial policy</a><a href="/about#contact">Contact us</a><a href="/privacy">Privacy</a><a href="/affiliate-disclosure">Affiliate disclosure</a><a href="/admin" target="_top">Administrator</a></div>
   <div className="footer-note"><Compass size={43} strokeWidth={1.4}/><p>Until next time,<br/><em>sea you soon.</em></p></div>
  </div>
  <div className="footer-bottom"><span>© {new Date().getUTCFullYear()} Cruising with Wendy</span><span>An independent cruise website <Waves size={17}/></span></div>

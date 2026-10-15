@@ -197,3 +197,11 @@ const seoMap=await (await sitemap.GET()).text();assert.ok(seoMap.includes('https
 const layout=await get('app/layout.tsx'),{createElement}=await import('react');const layoutHtml=renderToStaticMarkup(createElement(layout.default,{children:createElement('main',null,'SEO fixture')}));const graph=JSON.parse(layoutHtml.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)[1]);assert.ok(graph['@graph'].some(x=>x['@type']==='Organization'&&x.logo.url==='https://cruisingwithwendy.co.uk/brand/wendy-logo.webp'));assert.ok(graph['@graph'].some(x=>x['@type']==='WebSite'&&x.url==='https://cruisingwithwendy.co.uk/'));
 env.SITE_ORIGIN=seoOrigin;
 console.log('PASS: canonical-domain SEO, unique social metadata, twelve line pages, crawlable noindex filters, safe permanent redirects, structured website/organisation data, and original-guide sitemap coverage after 1,000+ news items.');
+
+const contactHtml=renderToStaticMarkup(await publicPage.default({params:Promise.resolve({path:['about']}),searchParams:Promise.resolve({})}));
+assert.ok(contactHtml.includes('id="contact"'));
+assert.ok(contactHtml.includes('href="mailto:enquirer@cruisingwithwendy.co.uk"'));
+assert.ok(layoutHtml.includes('href="/about#contact">Contact us</a>'));
+assert.ok(graph['@graph'].some(x=>x['@type']==='Organization'&&x.email==='enquirer@cruisingwithwendy.co.uk'));
+assert.ok(!contactHtml.includes('intro42@aol.com')&&!layoutHtml.includes('intro42@aol.com'));
+console.log('PASS: public contact email, site-wide contact link, organisation email schema and private forwarding destination.');
