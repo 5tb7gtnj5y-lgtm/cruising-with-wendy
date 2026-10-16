@@ -1,6 +1,6 @@
-import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Anchor, Palmtree, Luggage } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Compass, Waves, Ship, Sun, Luggage } from "lucide-react";
 import { publicEntries, setting } from "@/lib/content";
-import { LINES, dateLabel } from "@/lib/site";
+import { dateLabel } from "@/lib/site";
 import { NewsFeed } from "@/components/news-feed";
 import { Empty, WaveDivider } from "@/components/site-shell";
 import {HOME_TITLE,HOME_DESCRIPTION,pageMetadata} from "@/lib/seo";
@@ -34,10 +34,6 @@ export default async function Home(){
    </section>
    <WaveDivider/>
   </div>
-  <section className="line-strip" aria-label="Explore cruise lines">
-   <span className="eyebrow"><Anchor size={15}/> CHOOSE YOUR CREW</span>
-   {LINES.map(l=><a href={"/cruise-lines/"+l.slug} key={l.slug}>{l.name}<ArrowUpRight size={16}/></a>)}
-  </section>
   <section className="section">
    <div className="section-head">
     <div><p className="eyebrow"><Waves size={17}/> FRESH FROM THE HORIZON</p><h2>Latest cruise news</h2></div>
@@ -46,18 +42,6 @@ export default async function Home(){
    <p className="section-intro">New ships, sunny escapes and stories from the sea. Follow each one straight to the source.</p>
    {latest.items.length?<NewsFeed items={latest.items} affiliateLinks={affiliateLinks}/>:<Empty title="A fresh horizon is on its way" text="New, sourced cruise news will appear here as it is collected."/>}
    <p className="update-note"><span className="status-dot"/> {lastRefresh?"Last checked "+dateLabel(lastRefresh)+", "+new Date(lastRefresh).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/London"}):"News collection is being set up"} · News updates automatically every three hours · Source dates shown on each story</p>
-  </section>
-  <section className="section line-section">
-   <div className="section-head">
-    <div><p className="eyebrow"><Ship size={17}/> FIND YOUR KIND OF CRUISE</p><h2>Which way will you sail?</h2></div>
-    <span className="section-head-note">Twelve cruise lines. Plenty of possibilities.</span>
-   </div>
-   <div className="line-grid">{LINES.map((l,i)=><a className={"line-card line-card-"+l.slug} key={l.slug} href={"/cruise-lines/"+l.slug}>
-    <span className="line-card-doodle" aria-hidden="true">{i%4===0?<Sun size={57}/>:i%4===1?<Anchor size={57}/>:i%4===2?<Compass size={57}/>:<Palmtree size={57}/>}</span>
-    <div className="line-monogram" style={{backgroundColor:l.color}}>{l.mark}</div>
-    <h3>{l.name}</h3><p>{l.description}</p>
-    <span className="text-link">Come aboard <ArrowRight size={17}/></span>
-   </a>)}</div>
   </section>
   <section className="essentials-banner">
    <div><p className="eyebrow"><Luggage size={16}/> PACK THE GOOD STUFF</p><h2>Less suitcase chaos.<br/><em>More holiday mode.</em></h2><p>A few thoughtful essentials for your next adventure.</p></div>
