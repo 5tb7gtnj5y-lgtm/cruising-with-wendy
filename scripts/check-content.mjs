@@ -245,3 +245,18 @@ assert.ok(layoutHtml.includes('href="/ship-tracker">Ship tracker</a>')&&seoMap.i
 const trackerMeta=await publicPage.generateMetadata({params:Promise.resolve({path:['ship-tracker']}),searchParams:Promise.resolve({})});
 assert.ok(trackerMeta.alternates.canonical.endsWith('/ship-tracker'));
 console.log('PASS: safe provider-only map URLs, ship selection, timestamp/failure details links, freshness disclosure, database-independent tracker page, navigation and tracker SEO.');
+
+assert.ok(tracker.TRACKER_SHIPS.length>350);
+assert.equal(new Set(tracker.TRACKER_SHIPS.map(x=>x.id)).size,tracker.TRACKER_SHIPS.length);
+assert.ok(tracker.TRACKER_SHIPS.every(x=>/^[a-z0-9-]+$/.test(x.id)&&x.name&&x.line));
+assert.equal(tracker.findTrackerShips('MSC Virtuosa')[0].id,'msc-virtuosa');
+assert.equal(tracker.findTrackerShips('  SKY princess ')[0].id,'sky-princess');
+assert.equal(tracker.findTrackerShips('Marella').length,5);
+assert.ok(tracker.findTrackerShips('Carnival').length>20);
+assert.ok(tracker.findTrackerShips('Viking Ocean').length>5);
+assert.ok(tracker.findTrackerShips('P&O').some(x=>x.id==='arvia'));
+assert.ok(tracker.findTrackerShips('Laperouse').some(x=>x.name.includes('Lapérouse')));
+for(const query of ['', 'a','   ','zzzz-nonexistent-ship','<script>'])assert.equal(tracker.findTrackerShips(query).length,0);
+assert.ok(trackerHtml.includes('Search cruise ships')&&trackerHtml.includes('Ship name or cruise line'));
+assert.ok(trackerHtml.includes('Search 381 cruise ships')&&!trackerHtml.includes('<select'));
+console.log('PASS: full-fleet cruise ship search, exact-match priority, partial names and operator searches, accent-insensitive matching, empty/no-match handling and replacement of the restricted selector.');
