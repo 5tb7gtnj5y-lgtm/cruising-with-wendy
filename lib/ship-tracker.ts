@@ -2,7 +2,18 @@ import {CRUISE_SHIP_CATALOGUE} from "@/lib/cruise-ship-catalogue";
 export const TRACKER_PATH = "/ship-tracker";
 export const TRACKER_TITLE = "Cruise Ship Tracker & Latest Positions";
 export const TRACKER_DESCRIPTION = "Search cruise ships by name or cruise line and explore their latest reported positions on a free interactive map. Tracking coverage and report times vary.";
-export const TRACKER_PROVIDER = "https://www.cruiseshiptracking.com";
+export const TRACKER_PROVIDER = "https://www.vesselfinder.com";
+// Stable vessel identities; positions always come from the official VesselFinder widget.
+// Checked against public vessel particulars and Deck7's sourced ship index, 16 October 2026.
+export const TRACKER_IMOS:Readonly<Record<string,string>> = {
+ "marella-voyager":"9106302","marella-explorer":"9106297","marella-explorer-2":"9072446",
+ "marella-discovery":"9070632","marella-discovery-2":"9070620","iona":"9826548",
+ "queen-mary-2":"9241061","msc-virtuosa":"9803625","sky-princess":"9802396",
+};
+export function validImo(value:unknown):value is string{
+ if(typeof value!=="string"||!/^\d{7}$/.test(value))return false;
+ return [...value.slice(0,6)].reduce((total,digit,index)=>total+Number(digit)*(7-index),0)%10===Number(value[6]);
+}
 export const TRACKER_SHIPS = CRUISE_SHIP_CATALOGUE;
 export const DEFAULT_TRACKER_SHIP_ID = "marella-voyager";
 export function trackerShip(id:string){return TRACKER_SHIPS.find(ship=>ship.id===id)||TRACKER_SHIPS.find(ship=>ship.id===DEFAULT_TRACKER_SHIP_ID)!;}
@@ -15,5 +26,5 @@ export function findTrackerShips(query:string){
   return score(a.name)-score(b.name)||a.name.localeCompare(b.name);
  });
 }
-export function trackerMapUrl(id:string){return TRACKER_PROVIDER+"/embed/map?"+new URLSearchParams({ship:trackerShip(id).id,zoom:"6",theme:"light"}).toString();}
-export function trackerDetailsUrl(id:string){return TRACKER_PROVIDER+"/ships/"+trackerShip(id).id+"/where-is";}
+export function trackerMapUrl(imo:string){return validImo(imo)?"/api/ship-tracker/map?imo="+imo:null;}
+export function trackerDetailsUrl(imo:string){return validImo(imo)?TRACKER_PROVIDER+"/vessels/details/"+imo:TRACKER_PROVIDER+"/vessels";}

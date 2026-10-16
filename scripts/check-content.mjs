@@ -234,19 +234,21 @@ assert.ok(seoMap.includes('/hot-cruise-deals')&&!seoMap.includes('<loc>https://c
 console.log('PASS: three correctly tracked cruise partners, sponsored links and disclosure, every card changes position between visits, guides redirect, replacement navigation and deals SEO.');
 
 const tracker=await get('lib/ship-tracker.ts');
-for(const ship of tracker.TRACKER_SHIPS){
- const map=new URL(tracker.trackerMapUrl(ship.id));
- assert.equal(map.origin,'https://www.cruiseshiptracking.com');assert.equal(map.pathname,'/embed/map');assert.equal(map.searchParams.get('ship'),ship.id);
- assert.equal(new URL(tracker.trackerDetailsUrl(ship.id)).pathname,'/ships/'+ship.id+'/where-is');
+for(const [id,imo]of Object.entries(tracker.TRACKER_IMOS)){
+ assert.ok(tracker.TRACKER_SHIPS.some(ship=>ship.id===id));assert.ok(tracker.validImo(imo));
+ assert.equal(tracker.trackerMapUrl(imo),'/api/ship-tracker/map?imo='+imo);
+ assert.equal(tracker.trackerDetailsUrl(imo),'https://www.vesselfinder.com/vessels/details/'+imo);
 }
-assert.equal(tracker.trackerMapUrl('https://attacker.invalid'),tracker.trackerMapUrl('marella-voyager'));
+assert.equal(tracker.trackerMapUrl('https://attacker.invalid'),null);
+assert.equal(tracker.trackerMapUrl('9106301'),null);
 const trackerQueries=d1Queries;
 const trackerHtml=renderToStaticMarkup(await publicPage.default({params:Promise.resolve({path:['ship-tracker']}),searchParams:Promise.resolve({})}));
 assert.equal(d1Queries,trackerQueries,'Tracker must remain available without database queries');
 assert.ok(trackerHtml.includes('title="Marella Voyager latest reported position map"'));
-assert.ok(trackerHtml.includes('src="https://www.cruiseshiptracking.com/embed/map?ship=marella-voyager&amp;zoom=6&amp;theme=light"'));
-assert.ok(trackerHtml.includes('href="https://www.cruiseshiptracking.com/ships/marella-voyager/where-is"'));
-assert.ok(trackerHtml.includes('hours or days')&&trackerHtml.includes('30 minutes'));
+assert.ok(trackerHtml.includes('src="/api/ship-tracker/map?imo=9106302"'));
+assert.ok(trackerHtml.includes('href="https://www.vesselfinder.com/vessels/details/9106302"'));
+assert.ok(trackerHtml.includes('hours or days')&&trackerHtml.includes('Last reported AIS position'));
+assert.ok(!trackerHtml.includes('cruiseshiptracking.com'));
 assert.ok(layoutHtml.includes('href="/ship-tracker">Ship tracker</a>')&&seoMap.includes('/ship-tracker'));
 const trackerMeta=await publicPage.generateMetadata({params:Promise.resolve({path:['ship-tracker']}),searchParams:Promise.resolve({})});
 assert.ok(trackerMeta.alternates.canonical.endsWith('/ship-tracker'));
@@ -266,3 +268,23 @@ for(const query of ['', 'a','   ','zzzz-nonexistent-ship','<script>'])assert.equ
 assert.ok(trackerHtml.includes('Search cruise ships')&&trackerHtml.includes('Ship name or cruise line'));
 assert.ok(trackerHtml.includes('Search 381 cruise ships')&&!trackerHtml.includes('<select'));
 console.log('PASS: full-fleet cruise ship search, exact-match priority, partial names and operator searches, accent-insensitive matching, empty/no-match handling and replacement of the restricted selector.');
+
+const identities=await get('lib/ship-identity.ts');
+const entity=(name,imo)=>({labels:{en:{value:name}},claims:{P458:[{mainsnak:{datavalue:{value:imo}}}]}});
+assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Voyager','9106302')}),'9106302');
+assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Explorer','9106297')}),null);
+assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Voyager','9106302'),Q2:entity('Marella Voyager','9106297')}),null);
+let identityCalls=0;const identityFixture=async raw=>{identityCalls++;const url=new URL(raw);assert.equal(url.hostname,'www.wikidata.org');return Response.json(url.searchParams.get('action')==='wbsearchentities'?{search:[{id:'Q123'}]}:{entities:{Q123:entity('MS Britannia','9614036')}});};
+assert.equal(await identities.resolveShipImo('britannia',identityFixture),'9614036');assert.equal(identityCalls,2);
+assert.equal(await identities.resolveShipImo('not-a-ship',identityFixture),null);assert.equal(identityCalls,2);
+assert.equal(await identities.resolveShipImo('marella-voyager',identityFixture),'9106302');assert.equal(identityCalls,2);
+await assert.rejects(()=>identities.resolveShipImo('britannia',async()=>new Response('',{status:503})),/unavailable/);
+const vfMap=await get('app/api/ship-tracker/map/route.ts');
+assert.equal(vfMap.GET(new Request('https://example.invalid/api/ship-tracker/map?imo=invalid')).status,400);
+const vfDocument=vfMap.GET(new Request('https://example.invalid/api/ship-tracker/map?imo=9106302'));
+const vfHtml=await vfDocument.text();assert.ok(vfHtml.includes('https://www.vesselfinder.com/aismap.js')&&vfHtml.includes('imo="9106302"'));
+assert.ok(vfDocument.headers.get('Content-Security-Policy').includes("frame-ancestors 'self'"));
+const vfResolve=await get('app/api/ship-tracker/resolve/route.ts');
+assert.equal((await vfResolve.GET(new Request('https://example.invalid/api/ship-tracker/resolve?ship=https://attacker.invalid'))).status,400);
+assert.equal((await(await vfResolve.GET(new Request('https://example.invalid/api/ship-tracker/resolve?ship=iona'))).json()).imo,'9826548');
+console.log('PASS: official VesselFinder embed, checksum-validated IMO identities, exact-name lookup, ambiguity rejection, upstream failures, provider-only URLs and stale-position warning.');
