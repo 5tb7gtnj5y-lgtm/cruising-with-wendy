@@ -13,6 +13,8 @@ import {shoppingOffers} from "@/lib/shopping";
 import {pageMetadata} from "@/lib/seo";
 import {CruiseDealsPage} from "@/components/cruise-deals-page";
 import {DEALS_PATH,DEALS_TITLE,DEALS_DESCRIPTION} from "@/lib/cruise-deals";
+import {ShipTrackerPage} from "@/components/ship-tracker-page";
+import {TRACKER_PATH,TRACKER_TITLE,TRACKER_DESCRIPTION} from "@/lib/ship-tracker";
 type Props={params:Promise<{path:string[]}>,searchParams:Promise<Record<string,string|string[]|undefined>>};
 function single(value:string|string[]|undefined){return typeof value==="string"?value:"";}
 const titles:Record<string,[string,string]>={news:["Latest cruise news","Cruise-line updates, new sailings and stories from the sea. Always with a link to the source."],articles:["The cruise journal","Original perspectives, useful ideas and thoughtful reading for your next adventure."],guides:["Cruise ship & destination guides","A little preparation goes a long way. Find practical reading for wherever you are heading."],about:["A friendly port of call","Cruise news, practical reading and inspiration for the journey."],essentials:["The little things that help","A thoughtful shortlist of essentials for a more organised cruise."],privacy:["Your privacy, simply explained","What this website records, and why."],"affiliate-disclosure":["About our product links","Clear information about recommendations and affiliate links."]};
@@ -28,6 +30,7 @@ const searchTitles:Record<string,[string,string]>={
 export async function generateMetadata({params,searchParams}:Props):Promise<Metadata>{
  const {path}=await params,query=await searchParams;
  if(path.length===1&&(path[0]==="hot-cruise-deals"||path[0]==="guides"))return pageMetadata({title:DEALS_TITLE,description:DEALS_DESCRIPTION,path:DEALS_PATH});
+ if(path.length===1&&path[0]==="ship-tracker")return pageMetadata({title:TRACKER_TITLE,description:TRACKER_DESCRIPTION,path:TRACKER_PATH});
  if(path[0]==="read"&&path.length===2){const item=await bySlug(path[1]);if(!item)return {title:"Page not found",robots:{index:false,follow:false}};if(item.kind==="news")return {title:item.title,alternates:{canonical:item.sourceUrl},robots:{index:false,follow:true}};return pageMetadata({title:item.seoTitle||item.title,description:item.seoDescription||item.excerpt,path:"/read/"+item.slug,article:{publishedTime:item.publishedAt||undefined,modifiedTime:item.updatedAt}});}
  let title=path.length===1?searchTitles[path[0]]?.[0]:undefined,description=path.length===1?searchTitles[path[0]]?.[1]:undefined;
  if(path[0]==="cruise-lines"&&path.length===2){const l=LINES.find(x=>x.slug===path[1]);if(l){title=l.name+" cruise news & guides";description="Read the latest "+l.name+" cruise news, ship guides and practical articles, with original sources and clear publication dates.";}}
@@ -40,6 +43,7 @@ export default async function Page({params,searchParams}:Props){
  const {path}=await params,query=await searchParams,key=path[0];
  if(key==="guides"&&path.length===1)redirect(DEALS_PATH);
  if(key==="hot-cruise-deals"&&path.length===1)return <CruiseDealsPage/>;
+ if(key==="ship-tracker"&&path.length===1)return <ShipTrackerPage/>;
  if(key==="read"&&path.length===2){
   const item=await bySlug(path[1]);if(!item)notFound();if(item.kind==="news")redirect(item.sourceUrl);
   const sources=parseSources(item.sources),sections=item.body.match(/^## .+$/gm)||[],minutes=Math.max(1,Math.ceil(item.body.split(/\s+/).length/220)),related=await publicEntries({line:item.line,limit:8});

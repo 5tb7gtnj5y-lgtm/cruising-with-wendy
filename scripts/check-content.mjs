@@ -226,3 +226,22 @@ const dealsMeta=await publicPage.generateMetadata({params:Promise.resolve({path:
 assert.ok(dealsMeta.alternates.canonical.endsWith('/hot-cruise-deals'));
 assert.ok(seoMap.includes('/hot-cruise-deals')&&!seoMap.includes('<loc>https://cruisingwithwendy.co.uk/guides</loc>'));
 console.log('PASS: three correctly tracked cruise partners, sponsored links and disclosure, every card changes position between visits, guides redirect, replacement navigation and deals SEO.');
+
+const tracker=await get('lib/ship-tracker.ts');
+for(const ship of tracker.TRACKER_SHIPS){
+ const map=new URL(tracker.trackerMapUrl(ship.id));
+ assert.equal(map.origin,'https://www.cruiseshiptracking.com');assert.equal(map.pathname,'/embed/map');assert.equal(map.searchParams.get('ship'),ship.id);
+ assert.equal(new URL(tracker.trackerDetailsUrl(ship.id)).pathname,'/ships/'+ship.id+'/where-is');
+}
+assert.equal(tracker.trackerMapUrl('https://attacker.invalid'),tracker.trackerMapUrl('marella-voyager'));
+const trackerQueries=d1Queries;
+const trackerHtml=renderToStaticMarkup(await publicPage.default({params:Promise.resolve({path:['ship-tracker']}),searchParams:Promise.resolve({})}));
+assert.equal(d1Queries,trackerQueries,'Tracker must remain available without database queries');
+assert.ok(trackerHtml.includes('title="Marella Voyager latest reported position map"'));
+assert.ok(trackerHtml.includes('src="https://www.cruiseshiptracking.com/embed/map?ship=marella-voyager&amp;zoom=6&amp;theme=light"'));
+assert.ok(trackerHtml.includes('href="https://www.cruiseshiptracking.com/ships/marella-voyager/where-is"'));
+assert.ok(trackerHtml.includes('hours or days')&&trackerHtml.includes('30 minutes'));
+assert.ok(layoutHtml.includes('href="/ship-tracker">Ship tracker</a>')&&seoMap.includes('/ship-tracker'));
+const trackerMeta=await publicPage.generateMetadata({params:Promise.resolve({path:['ship-tracker']}),searchParams:Promise.resolve({})});
+assert.ok(trackerMeta.alternates.canonical.endsWith('/ship-tracker'));
+console.log('PASS: safe provider-only map URLs, ship selection, timestamp/failure details links, freshness disclosure, database-independent tracker page, navigation and tracker SEO.');

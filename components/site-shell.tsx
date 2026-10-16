@@ -5,7 +5,7 @@ export function Header(){return <>
  <div className="masthead-strip"><Sun size={14}/> A little inspiration. A lot of sea air. <Waves size={16}/></div>
  <header className="site-header">
   <a className="brand brand-new" href="/" aria-label="Cruising with Wendy home"><img className="brand-logo" src="/brand/wendy-logo.webp" width="1336" height="1177" alt="Cruising with Wendy — your friendly captain at sea"/></a>
-  <nav aria-label="Main navigation"><a href="/news">Latest news</a><a href="/hot-cruise-deals">Hot Cruise deals</a><details className="line-menu"><summary>Cruise lines <span>⌄</span></summary><div>{LINES.map(l=><a key={l.slug} href={"/cruise-lines/"+l.slug}><Ship size={15}/>{l.name}</a>)}</div></details><a href="/essentials">Essentials</a></nav>
+  <nav aria-label="Main navigation"><a href="/news">Latest news</a><a href="/hot-cruise-deals">Hot Cruise deals</a><a href="/ship-tracker">Ship tracker</a><details className="line-menu"><summary>Cruise lines <span>⌄</span></summary><div>{LINES.map(l=><a key={l.slug} href={"/cruise-lines/"+l.slug}><Ship size={15}/>{l.name}</a>)}</div></details><a href="/essentials">Essentials</a></nav>
   <div className="header-actions"><details className="search-menu"><summary aria-label="Open article search"><Search size={21}/></summary><form action="/news"><label htmlFor="global-search">What’s on your horizon?</label><div className="input-combo"><input id="global-search" name="q" placeholder="Ship, destination or topic…" maxLength={100}/><button aria-label="Search"><Search size={19}/></button></div></form></details><a className="about-link" href="/about">About <ArrowUpRight size={14}/></a></div>
  </header>
  </>;}
@@ -14,7 +14,7 @@ export function Footer(){return <footer>
  <div className="footer-horizon" aria-hidden="true"><Ship size={37}/><span/><Waves size={34}/><span/><Sun size={33}/></div>
  <div className="footer-top">
   <div><a className="brand footer-brand brand-new" href="/" aria-label="Cruising with Wendy home"><img className="brand-logo" src="/brand/wendy-logo.webp" width="1336" height="1177" loading="lazy" alt="Cruising with Wendy"/></a><p>News, thoughtful guides and<br/>a little inspiration for life at sea.</p></div>
-  <div><span className="footer-label">Keep exploring</span><a href="/news">Cruise news</a><a href="/hot-cruise-deals">Hot Cruise deals</a><a href="/essentials">Cruise essentials</a></div>
+  <div><span className="footer-label">Keep exploring</span><a href="/news">Cruise news</a><a href="/hot-cruise-deals">Hot Cruise deals</a><a href="/ship-tracker">Ship tracker</a><a href="/essentials">Cruise essentials</a></div>
   <div><span className="footer-label">Good to know</span><a href="/about">About & editorial policy</a><a href="/about#contact">Contact us</a><a href="/privacy">Privacy</a><a href="/affiliate-disclosure">Affiliate disclosure</a><a href="/admin" target="_top">Administrator</a></div>
   <div className="footer-note"><Compass size={43} strokeWidth={1.4}/><p>Until next time,<br/><em>sea you soon.</em></p></div>
  </div>
