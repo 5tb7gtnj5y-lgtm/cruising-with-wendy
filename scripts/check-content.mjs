@@ -274,11 +274,11 @@ const entity=(name,imo)=>({labels:{en:{value:name}},claims:{P458:[{mainsnak:{dat
 assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Voyager','9106302')}),'9106302');
 assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Explorer','9106297')}),null);
 assert.equal(identities.matchingImo('Marella Voyager',{Q1:entity('Marella Voyager','9106302'),Q2:entity('Marella Voyager','9106297')}),null);
-let identityCalls=0;const identityFixture=async raw=>{identityCalls++;const url=new URL(raw);assert.equal(url.hostname,'www.wikidata.org');return Response.json(url.searchParams.get('action')==='wbsearchentities'?{search:[{id:'Q123'}]}:{entities:{Q123:entity('MS Britannia','9614036')}});};
-assert.equal(await identities.resolveShipImo('britannia',identityFixture),'9614036');assert.equal(identityCalls,2);
+let identityCalls=0;const identityFixture=async raw=>{identityCalls++;const url=new URL(raw);assert.equal(url.hostname,'www.wikidata.org');if(url.searchParams.get('action')==='wbsearchentities'){assert.equal(url.searchParams.get('limit'),'50');return Response.json({search:[{id:'Q456',description:'painting'},{id:'Q123',description:'cruise ship'}]});}assert.equal(url.searchParams.get('ids'),'Q123');return Response.json({entities:{Q123:entity('Carnival Celebration','9837456')}});};
+assert.equal(await identities.resolveShipImo('carnival-celebration',identityFixture),'9837456');assert.equal(identityCalls,2);
 assert.equal(await identities.resolveShipImo('not-a-ship',identityFixture),null);assert.equal(identityCalls,2);
 assert.equal(await identities.resolveShipImo('marella-voyager',identityFixture),'9106302');assert.equal(identityCalls,2);
-await assert.rejects(()=>identities.resolveShipImo('britannia',async()=>new Response('',{status:503})),/unavailable/);
+await assert.rejects(()=>identities.resolveShipImo('carnival-celebration',async()=>new Response('',{status:503})),/unavailable/);
 const vfMap=await get('app/api/ship-tracker/map/route.ts');
 assert.equal(vfMap.GET(new Request('https://example.invalid/api/ship-tracker/map?imo=invalid')).status,400);
 const vfDocument=vfMap.GET(new Request('https://example.invalid/api/ship-tracker/map?imo=9106302'));

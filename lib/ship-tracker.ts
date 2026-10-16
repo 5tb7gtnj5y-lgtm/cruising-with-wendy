@@ -9,6 +9,7 @@ export const TRACKER_IMOS:Readonly<Record<string,string>> = {
  "marella-voyager":"9106302","marella-explorer":"9106297","marella-explorer-2":"9072446",
  "marella-discovery":"9070632","marella-discovery-2":"9070620","iona":"9826548",
  "queen-mary-2":"9241061","msc-virtuosa":"9803625","sky-princess":"9802396",
+ "britannia":"9614036","arvia":"9849693","arcadia":"9226906","aurora":"9169524","azura":"9424883",
 };
 export function validImo(value:unknown):value is string{
  if(typeof value!=="string"||!/^\d{7}$/.test(value))return false;

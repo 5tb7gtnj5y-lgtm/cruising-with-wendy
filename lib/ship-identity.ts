@@ -17,8 +17,13 @@ export async function resolveShipImo(id:string,fetcher:typeof fetch=fetch){
   const response=await fetcher("https://www.wikidata.org/w/api.php?"+new URLSearchParams({format:"json",...params}),{headers:{"User-Agent":"CruisingWithWendy/1.0 (https://cruisingwithwendy.co.uk/about#contact)",Accept:"application/json"},signal:AbortSignal.timeout(8000)});
   if(!response.ok)throw Error("Ship identity service unavailable");return response.json() as Promise<Record<string,unknown>>;
  }
- const result=await wikidata({action:"wbsearchentities",search:ship.name,language:"en",limit:"5",type:"item"});
- const search=Array.isArray(result.search)?result.search:[],ids=search.map(item=>(item as {id?:string}).id||"").filter(id=>/^Q\d+$/.test(id));
+ const result=await wikidata({action:"wbsearchentities",search:ship.name,language:"en",limit:"50",type:"item"});
+ if(result.error)throw Error("Ship identity service unavailable");
+ const search=(Array.isArray(result.search)?result.search:[]) as {id?:string;description?:string}[];
+ const cruiseMatches=search.filter(item=>/cruise/i.test(item.description||""));
+ const vesselMatches=search.filter(item=>/ship|vessel|liner/i.test(item.description||""));
+ const candidates=cruiseMatches.length?cruiseMatches:vesselMatches.length?vesselMatches:search;
+ const ids=candidates.slice(0,20).map(item=>item.id||"").filter(id=>/^Q\d+$/.test(id));
  if(!ids.length)return null;
  const data=await wikidata({action:"wbgetentities",ids:ids.join("|"),props:"labels|aliases|claims",languages:"en"});
  return matchingImo(ship.name,(data.entities||{}) as Record<string,Entity>);
