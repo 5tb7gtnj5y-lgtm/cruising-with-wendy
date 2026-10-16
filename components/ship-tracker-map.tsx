@@ -1,7 +1,7 @@
 "use client";
 import {useState} from "react";
 import {ArrowUpRight, MapPin, Search, Ship} from "lucide-react";
-import {DEFAULT_TRACKER_SHIP_ID,TRACKER_PROVIDER,TRACKER_QUICK_PICKS,TRACKER_SHIPS,findTrackerShips,trackerShip,trackerMapUrl,trackerDetailsUrl} from "@/lib/ship-tracker";
+import {DEFAULT_TRACKER_SHIP_ID,TRACKER_PROVIDER,TRACKER_SHIPS,findTrackerShips,trackerShip,trackerMapUrl,trackerDetailsUrl} from "@/lib/ship-tracker";
 
 export function ShipTrackerMap(){
  const [shipId,setShipId]=useState(DEFAULT_TRACKER_SHIP_ID);
@@ -23,7 +23,6 @@ export function ShipTrackerMap(){
    <p role="status">{matches.length?matches.length+" matching "+(matches.length===1?"ship":"ships")+(matches.length>10?" · Showing the first 10. Keep typing to narrow your search.":" · Choose a ship to show it on the map."):"No matching ship in this catalogue. Try a shorter name or a cruise line. The map below still shows "+ship.name+"."}</p>
    {matches.length?<ul>{matches.slice(0,10).map(item=><li key={item.id}><button type="button" onClick={()=>chooseShip(item.id)} aria-label={"Show "+item.name+" on map"}><Ship size={20} aria-hidden="true"/><span><strong>{item.name}</strong><small>{item.line}</small></span><span className="tracker-result-action">Show on map →</span></button></li>)}</ul>:<a className="text-link" href={TRACKER_PROVIDER+"/ships"} target="_blank" rel="noopener noreferrer">Check the provider’s latest directory <ArrowUpRight size={15} aria-hidden="true"/></a>}
   </div>:null}
-  <div className="tracker-quick-picks"><span>Quick picks</span>{TRACKER_QUICK_PICKS.map(id=><button key={id} type="button" onClick={()=>chooseShip(id)} aria-pressed={ship.id===id}>{trackerShip(id).name}</button>)}</div>
   <div className="tracker-ship-label" aria-live="polite"><Ship size={20} aria-hidden="true"/><strong>{ship.name}</strong><span>{ship.line}</span></div>
   <div className="tracker-map-frame"><iframe key={ship.id} src={trackerMapUrl(ship.id)} title={ship.name+" latest reported position map"} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div>
   <div className="tracker-map-credit"><p>Ship tracking by <a href={TRACKER_PROVIDER} target="_blank" rel="noopener noreferrer">CruiseShipTracking.com</a></p><a href={trackerDetailsUrl(ship.id)} target="_blank" rel="noopener noreferrer">Position details <ArrowUpRight size={15} aria-hidden="true"/></a></div>
