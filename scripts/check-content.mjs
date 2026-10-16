@@ -205,3 +205,24 @@ assert.ok(layoutHtml.includes('href="/about#contact">Contact us</a>'));
 assert.ok(graph['@graph'].some(x=>x['@type']==='Organization'&&x.email==='enquirer@cruisingwithwendy.co.uk'));
 assert.ok(!contactHtml.includes('intro42@aol.com')&&!layoutHtml.includes('intro42@aol.com'));
 console.log('PASS: public contact email, site-wide contact link, organisation email schema and private forwarding destination.');
+
+const cruiseDeals=await get('lib/cruise-deals.ts');
+for(let previous=0;previous<3;previous++)for(const random of [0,0.49,0.99]){
+ const next=cruiseDeals.nextDealOrder(previous,()=>random);
+ const before=cruiseDeals.orderedCruiseDeals(previous),after=cruiseDeals.orderedCruiseDeals(next);
+ assert.deepEqual(after.map(x=>x.id).sort(),before.map(x=>x.id).sort());
+ assert.ok(after.every((item,index)=>item.id!==before[index].id));
+}
+const dealsHtml=renderToStaticMarkup(await publicPage.default({params:Promise.resolve({path:['hot-cruise-deals']}),searchParams:Promise.resolve({})}));
+assert.equal((dealsHtml.match(/data-deal-id=/g)||[]).length,3);
+for(const mid of ['68716','5919','60697'])assert.ok(dealsHtml.includes('https://www.awin1.com/cread.php?awinmid='+mid+'&amp;awinaffid=3125110'));
+assert.equal((dealsHtml.match(/rel="sponsored noopener noreferrer"/g)||[]).length,3);
+assert.ok(dealsHtml.includes('Advertisement')&&dealsHtml.includes('may earn a commission'));
+assert.ok(!dealsHtml.includes('£')&&!dealsHtml.includes('limited time'));
+assert.ok(layoutHtml.includes('href="/hot-cruise-deals">Hot Cruise deals</a>'));
+assert.ok(!layoutHtml.includes('href="/guides"'));
+await assert.rejects(()=>publicPage.default({params:Promise.resolve({path:['guides']}),searchParams:Promise.resolve({})}),/Redirect \/hot-cruise-deals/);
+const dealsMeta=await publicPage.generateMetadata({params:Promise.resolve({path:['hot-cruise-deals']}),searchParams:Promise.resolve({})});
+assert.ok(dealsMeta.alternates.canonical.endsWith('/hot-cruise-deals'));
+assert.ok(seoMap.includes('/hot-cruise-deals')&&!seoMap.includes('<loc>https://cruisingwithwendy.co.uk/guides</loc>'));
+console.log('PASS: three correctly tracked cruise partners, sponsored links and disclosure, every card changes position between visits, guides redirect, replacement navigation and deals SEO.');

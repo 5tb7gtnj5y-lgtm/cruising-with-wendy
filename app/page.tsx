@@ -19,7 +19,7 @@ export default async function Home(){
      <p>Cruise news, brilliant ideas and a little holiday daydreaming. Welcome to your happy place at sea.</p>
      <div className="hero-buttons">
       <a className="button primary" href="/news">Let’s explore <ArrowRight size={19}/></a>
-      <a className="text-link" href="/guides">Find a cruise guide <Compass size={18}/></a>
+      <a className="text-link" href="/hot-cruise-deals">Hot Cruise deals <ArrowUpRight size={18}/></a>
      </div>
      <div className="hero-bottom">
       <span className="mini-life-ring" aria-hidden="true"/>
