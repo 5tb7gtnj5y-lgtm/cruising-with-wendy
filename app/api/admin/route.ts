@@ -2,6 +2,7 @@ import { adminApi, sameOrigin } from "@/lib/auth";
 import { state, inputSchema, addDraft, saveEdit, publish, setStatus, feature, remove, revisionList, restoreDraft, setSetting, trustedSources, seoIssues, allContent } from "@/lib/content";
 import { getDb } from "@/db";import { content,revisions,settings } from "@/db/schema";
 import { safeUrl } from "@/lib/site";
+import { SHOPPING_PRODUCTS } from "@/lib/shopping";
 export const dynamic="force-dynamic";
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{"Cache-Control":"private, no-store"}});
 export async function GET(request:Request){if(!await adminApi())return json({error:"Administrator sign-in required."},403);const u=new URL(request.url);if(u.searchParams.has("revisions"))return json(await revisionList(u.searchParams.get("revisions")!));if(u.searchParams.has("export")){const db=getDb();return json({content:await db.select().from(content),revisions:await db.select().from(revisions),settings:await db.select().from(settings),exportedAt:new Date().toISOString()});}const data=await state();return json({...data,sources:trustedSources,seo:data.items.filter(x=>x.status==="published"&&x.kind!=="news").map(x=>({id:x.id,title:x.title,slug:x.slug,issues:seoIssues(x)}))});}
@@ -19,7 +20,7 @@ export async function POST(request:Request){
  case "delete":await remove(id);result={message:"Removed. News suppression is kept to prevent re-import."};break;
  case "restore":result={id:await restoreDraft(id),message:"Previous version restored as a review draft."};break;
  case "pause":await setSetting("paused",p.paused?"true":"false");result={message:p.paused?"Automatic updates paused.":"Automatic updates enabled."};break;
- case "affiliates":{if(!Array.isArray(p.links)||p.links.length>3)throw Error("Invalid links.");const clean=p.links.map((x:{key:string,url:string})=>{if(!["packing","cables","bag"].includes(x.key))throw Error("Invalid product.");if(x.url&&!safeUrl(x.url))throw Error("Use a valid HTTPS product URL.");return {key:x.key,url:safeUrl(x.url)};}).filter((x:{url:string})=>x.url);await setSetting("affiliate_links",JSON.stringify(clean));result={message:"Product links saved."};break;}
+ case "affiliates":{if(!Array.isArray(p.links)||p.links.length>SHOPPING_PRODUCTS.length)throw Error("Invalid links.");const clean=p.links.map((x:{key:string,url:string})=>{if(!SHOPPING_PRODUCTS.some(product=>product.key===x.key))throw Error("Invalid product.");if(x.url&&!safeUrl(x.url))throw Error("Use a valid HTTPS product URL.");return {key:x.key,url:safeUrl(x.url)};}).filter((x:{url:string})=>x.url);await setSetting("affiliate_links",JSON.stringify(clean));result={message:"Product links saved."};break;}
  default:return json({error:"Unknown action."},400);
  }return json(result);}catch(e){return json({error:e instanceof Error?e.message:"Unable to save this change."},400);}
 }

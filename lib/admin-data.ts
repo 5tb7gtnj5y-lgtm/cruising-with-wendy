@@ -1,6 +1,7 @@
 import {validSession} from "./session";
 import {trustedSources,seoIssues,type Entry} from "./content";
 import {safeUrl} from "./site";
+import {SHOPPING_PRODUCTS} from "./shopping";
 
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, nofollow","X-Wendy-Admin-Version":"native-data-20261013"}});
 const columns="id,slug,kind,status,title,excerpt,body,line,ship,destination,source_url AS sourceUrl,source_name AS sourceName,sources,seo_title AS seoTitle,seo_description AS seoDescription,ai,featured,published_at AS publishedAt,created_at AS createdAt,updated_at AS updatedAt,revision,group_key AS groupKey,hidden";
@@ -8,7 +9,7 @@ const columns="id,slug,kind,status,title,excerpt,body,line,ship,destination,sour
 export function readAffiliateLinks(value:string){
  try{
   const parsed:unknown=JSON.parse(value);if(!Array.isArray(parsed))return [];
-  return parsed.filter((x):x is {key:string;url:string}=>!!x&&typeof x==="object"&&typeof x.key==="string"&&["packing","cables","bag"].includes(x.key)&&typeof x.url==="string"&&!!safeUrl(x.url)).slice(0,3).map(x=>({key:x.key,url:safeUrl(x.url)}));
+  return parsed.filter((x):x is {key:string;url:string}=>!!x&&typeof x==="object"&&typeof x.key==="string"&&SHOPPING_PRODUCTS.some(p=>p.key===x.key)&&typeof x.url==="string"&&!!safeUrl(x.url)).slice(0,SHOPPING_PRODUCTS.length).map(x=>({key:x.key,url:safeUrl(x.url)}));
  }catch{return [];}
 }
 
