@@ -1,4 +1,4 @@
-export type ShoppingOffer={key:string;label:string;title:string;description:string;thumbnail:string;url:string;affiliate:boolean};
+export type ShoppingOffer={key:string;label:string;title:string;description:string;thumbnail:string;url:string;affiliate:boolean;buttonLabel?:string};
 export const SHOPPING_PRODUCTS=[
  {key:"packing",label:"Packing organisers",title:"Packing organisers",description:"Keep your cabin drawers tidy and make unpacking a little simpler.",search:"packing+cubes",thumbnail:"/shopping/packing.svg"},
  {key:"cables",label:"Cable pouch",title:"A tidy cable pouch",description:"Keep charging leads together. Check your cruise line’s electrical-item policy before buying accessories.",search:"cable+organiser+pouch",thumbnail:"/shopping/cables.svg"},
@@ -13,3 +13,4 @@ export function shoppingOffers(raw="[]"):ShoppingOffer[]{
  return SHOPPING_PRODUCTS.map(({search,defaultUrl,...product})=>({...product,url:links[product.key]||defaultUrl||"https://www.amazon.co.uk/s?k="+search,affiliate:!!links[product.key]||!!defaultUrl}));
 }
 export function offerPair(offers:ShoppingOffer[],slot:number,tick:number){return [offers[(slot+tick)%offers.length],offers[(slot+tick+1)%offers.length]].filter(Boolean);}
+export function essentialsOffers(raw="[]"):ShoppingOffer[]{return [...shoppingOffers(raw),{key:"lycamobile-ie",label:"Lycamobile Ireland",title:"Lycamobile Ireland",description:"Explore SIM and mobile plans from Lycamobile Ireland. Check eligibility, coverage and roaming terms for your trip.",thumbnail:"/shopping/mobile.svg",url:"https://www.awin1.com/cread.php?awinmid=121578&awinaffid=3125110",affiliate:true,buttonLabel:"Explore Lycamobile"}];}
