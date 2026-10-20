@@ -1,4 +1,4 @@
-import { Compass, Search, ArrowUpRight, Waves, Ship, Sun } from "lucide-react";
+import { Compass, Search, ArrowUpRight, Waves, Ship, Sun, Wifi } from "lucide-react";
 
 export function Header(){return <>
  <div className="masthead-strip"><Sun size={14}/> A little inspiration. A lot of sea air. <Waves size={16}/></div>
@@ -7,6 +7,7 @@ export function Header(){return <>
   <nav aria-label="Main navigation"><a href="/news">Latest news</a><a href="/hot-cruise-deals">Hot Cruise deals</a><a href="/ship-tracker">Ship tracker</a><a href="/essentials">Essentials</a></nav>
   <div className="header-actions"><details className="search-menu"><summary aria-label="Open article search"><Search size={21}/></summary><form action="/news"><label htmlFor="global-search">What’s on your horizon?</label><div className="input-combo"><input id="global-search" name="q" placeholder="Ship, destination or topic…" maxLength={100}/><button aria-label="Search"><Search size={19}/></button></div></form></details><a className="about-link" href="/about">About <ArrowUpRight size={14}/></a></div>
  </header>
+ <aside className="gigsky-banner" aria-label="GigSky affiliate offer"><div className="gigsky-banner-inner"><span className="gigsky-banner-icon" aria-hidden="true"><Wifi size={26}/></span><div className="gigsky-banner-copy"><strong>Stay connected with GigSky</strong><p>Explore cruise &amp; travel eSIM plans. Check ship and device compatibility.</p><small>Affiliate link · We may earn a commission.</small></div><a className="gigsky-banner-link" href="https://plans.gigsky.com/2KSX75F/2CTPL/?uid=5&amp;url=https%3A%2F%2Fcruisingwithwendy.co.uk%2F" target="_blank" rel="sponsored noopener noreferrer">Explore GigSky <ArrowUpRight size={17} aria-hidden="true"/><span className="gigsky-new-tab"> (opens in a new tab)</span></a></div></aside>
  </>;}
 export function WaveDivider(){return <svg className="wave-divider" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 25C180 70 300-10 480 27S790 72 970 32S1260 5 1440 38V90H0Z" fill="currentColor" opacity=".24"/><path d="M0 47C170 8 340 85 550 49S850 8 1080 49S1300 75 1440 45V90H0Z" fill="currentColor" opacity=".45"/><path d="M0 64C170 94 330 42 510 63S800 89 1010 65S1260 43 1440 69V90H0Z" fill="currentColor"/></svg>;}
 export function Footer(){return <footer>
